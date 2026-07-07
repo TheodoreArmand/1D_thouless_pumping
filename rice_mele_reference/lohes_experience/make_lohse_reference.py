@@ -286,7 +286,13 @@ def phi_of_t_factory(Ttot, mode):
 
 def run_pump(Ttot, mode, dt=0.02, traces=True):
     """One pump cycle phi: 0 -> 2pi. Returns final transport fraction f,
-    final band-0 population P0, and (optionally) traces."""
+    final band-0 population P0, and (optionally) traces.
+
+    Displacement is the time-integrated velocity expectation <p>/m
+    (Ehrenfest current). Unlike the naive <x> on a periodic ring, this stays
+    correct when dynamical-phase dispersion spreads the packet around the
+    ring on long runs. The momentum density is read off the mid-step
+    k-space state that the split-step method computes anyway."""
     phit = phi_of_t_factory(Ttot, mode)
     Kin = np.exp(-1j * HB2 * PG**2 * dt)
     ns = int(round(Ttot / dt))
@@ -295,11 +301,12 @@ def run_pump(Ttot, mode, dt=0.02, traces=True):
     tr_phi, tr_x = [], []
     p0 = np.full(NS, np.nan)
     ti = 0
+    xdisp = 0.0
     for s in range(ns + 1):
         ph_now = phit(s * dt)
         if traces and s % de == 0:
             tr_phi.append(ph_now)
-            tr_x.append((np.sum(np.abs(psi) ** 2 * XG) * DX - X0) / DL)
+            tr_x.append(xdisp / DL)
         while ti < NS and ph_now >= SPH[ti] - 1e-9:
             p0[ti] = DX * np.sum(np.abs(QB[ti].conj().T @ psi) ** 2)
             ti += 1
@@ -308,12 +315,17 @@ def run_pump(Ttot, mode, dt=0.02, traces=True):
         pm = phit((s + 0.5) * dt)
         Vh = np.exp(-1j * potential(XG, pm) * 0.5 * dt)
         psi = Vh * psi
-        psi = np.fft.ifft(Kin * np.fft.fft(psi))
+        psik = np.fft.fft(psi)
+        dens_k = np.abs(psik) ** 2
+        vmid = 2.0 * HB2 * float(np.sum(PG * dens_k) / np.sum(dens_k))
+        xdisp += vmid * dt
+        psi = np.fft.ifft(Kin * psik)
         psi = Vh * psi
-    f = (np.sum(np.abs(psi) ** 2 * XG) * DX - X0) / DL
+    f = xdisp / DL
+    f_naive = (np.sum(np.abs(psi) ** 2 * XG) * DX - X0) / DL
     P0f = DX * np.sum(np.abs(QB[0].conj().T @ psi) ** 2)
-    return dict(f=float(f), P0=float(P0f), tr_phi=np.array(tr_phi),
-                tr_x=np.array(tr_x), p0=p0)
+    return dict(f=float(f), f_naive=float(f_naive), P0=float(P0f),
+                tr_phi=np.array(tr_phi), tr_x=np.array(tr_x), p0=p0)
 
 
 # ===========================================================================
@@ -500,8 +512,8 @@ def fig_scan(scan):
     ax.set_xlabel(r"pump cycle time $T\ [\pi\,\hbar/E_{r,s}]$")
     ax.set_ylabel("final-state metric")
     ax.set_ylim(0, 1.08)
-    ax.set_title(r"How long to be adiabatic? uniform needs $T\gtrsim 2000\pi$; "
-                 r"gap-adaptive $\sim 300\pi$")
+    ax.set_title(r"How long to be adiabatic? uniform needs $T\gtrsim 4000\pi$; "
+                 r"gap-adaptive reaches $P_0{\ge}0.99$ near $150\pi$")
     ax.legend(loc="lower right", fontsize=9.5, ncol=1)
     return fig
 
@@ -570,9 +582,11 @@ def main():
     init_dynamics()
     Tpi_demo = 400.0
     ra = run_pump(Tpi_demo * np.pi, "adaptive")
-    print(f"    adaptive T=400pi: f={ra['f']:+.4f}  P0={ra['P0']:.4f}", flush=True)
+    print(f"    adaptive T=400pi: f={ra['f']:+.4f} (naive {ra['f_naive']:+.4f}, "
+          f"old ref +0.9999)  P0={ra['P0']:.4f}", flush=True)
     ru = run_pump(Tpi_demo * np.pi, "uniform")
-    print(f"    uniform  T=400pi: f={ru['f']:+.4f}  P0={ru['P0']:.4f}", flush=True)
+    print(f"    uniform  T=400pi: f={ru['f']:+.4f} (naive {ru['f_naive']:+.4f}, "
+          f"old ref +0.4227)  P0={ru['P0']:.4f}", flush=True)
     fig_gap_demo(d, ru, ra, Tpi_demo, "fig5_gap_adaptive_pump.png")
 
     print("[4] uniform pump at T = 2000 pi (adiabatic check) ...", flush=True)
@@ -584,7 +598,8 @@ def main():
                  title_extra=" (uniform now nearly adiabatic)")
 
     print("[5] adiabatic time scan (uniform + gap-adaptive) ...", flush=True)
-    T_uni = np.array([100, 200, 400, 600, 800, 1000, 1400, 1800, 2200, 2600, 3000, 3600])
+    T_uni = np.array([100, 200, 400, 600, 800, 1000, 1400, 1800, 2200, 2600,
+                      3000, 3600, 4000, 4400, 4800])
     T_ada = np.array([50, 100, 150, 200, 300, 400, 600, 800])
     scan = dict(T_uni=T_uni, T_ada=T_ada, eta=d["eta"])
     for key, Ts, mode in (("uni", T_uni, "uniform"), ("ada", T_ada, "adaptive")):
@@ -616,7 +631,8 @@ def main():
     save(fig_pump_path(d), "fig4_pump_path")
     save(fig_scan(scan), "fig6_adiabatic_time_scan")
 
-    np.savez(HERE / "lohse_reference_data.npz", **d, **scan,
+    np.savez(HERE / "lohse_reference_data.npz", **d,
+             **{k: v for k, v in scan.items() if k != "eta"},
              demo_Tpi=Tpi_demo,
              demo_uni_phi=ru["tr_phi"], demo_uni_x=ru["tr_x"], demo_uni_p0=ru["p0"],
              demo_ada_phi=ra["tr_phi"], demo_ada_x=ra["tr_x"], demo_ada_p0=ra["p0"],
