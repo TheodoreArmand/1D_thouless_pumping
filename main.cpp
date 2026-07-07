@@ -245,7 +245,7 @@ bool basis_all_finite(const std::vector<BasisParams>& basis) {
 
 int main() {
     try {
-        PumpConfig cfg = pumpconfig::make_pump_config("lohse_10_5");  // TEMP dt scan
+        PumpConfig cfg = pumpconfig::make_legacy_prb_3_3_config();
         load_phase_schedule(cfg);
         validate_config(cfg);
 
