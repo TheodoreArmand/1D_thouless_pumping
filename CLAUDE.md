@@ -39,7 +39,7 @@ Key convention: TDVP parameters are addressed by `AlphaIndex{a1,..}` with a1 = 1
 
 ## Units and conventions (gotchas)
 
-- Code units ħ = 1, m = 1 (`src/physical_constants.hpp`); `recoil_energy_for_lattice` defines Er with k = 2π/lattice_a (long-lattice period a = 8), while the Rice–Mele reference notes use short-lattice units (d_s = 1, E_{r,s} = 1).
+- Code units ħ = 1, m = 1 (`src/physical_constants.hpp`); `recoil_energy_for_lattice` uses k = 2π/lattice_a = π/d_s, i.e. the **short-lattice** recoil E_r,s (= π²/32 ≈ 0.3084 for a = 8) — the same energy unit as the Rice–Mele reference data (which sets d_s = 1, E_r,s = 1). Time conversion: T_code = (32/π²) · T[ħ/E_r,s] ≈ 3.24 · T.
 - **Factor-of-2 depth trap**: "Vs=Vl=3" labels two different potentials — the full-depth "grid" convention vs the half-depth "main.cpp" convention that the ECG binary actually integrates. Read `rice_mele_reference/Vs3Vl3_3_3/gap_adaptive_Vs3Vl3_convention_note.md` before comparing any ECG result to reference curves or regenerating schedules.
 - Phase schedule CSV: columns `s,phi` with s = t/T strictly increasing and spanning exactly [0,1]; linearly interpolated; `#` comments allowed.
 - Basis CSV format (`initial_state/`, `basis_initial/final.csv`): per Gaussian, one `re,im` line each for u, then A (N² entries), B (N²), R (N), then one integer name line.
@@ -48,7 +48,7 @@ Key convention: TDVP parameters are addressed by `AlphaIndex{a1,..}` with a1 = 1
 
 Each run writes `out/<out_root>/a<a>_K<K>_tmax<T>_VsER<vs>_VlER<vl>/` containing `config.txt`, `trace.csv`, `snapshots.csv`, `basis_initial.csv`, `basis_final.csv`, `summary.txt`. Success criteria for a pump run: Δpolarization_cell ≈ −1 per cycle, small norm/energy drift, and healthy solver diagnostics — max actual-solve condition number, effective rank vs param_dim, discarded-rhs fraction, min Re(B) and min Re(A+B) staying positive. These are printed per sampled step and aggregated in summary.txt.
 
-Reference/analysis material: `rice_mele_reference/Vs3Vl3_3_3/` (phase schedules, Rice–Mele band-model benchmark data + README), `successful_case/Vs3Vl3_3_3/` (Jupyter density-movie notebook and HTML report over the good run's snapshots.csv), `reference/` (papers).
+Reference/analysis material: `rice_mele_reference/Vs3Vl3_3_3/` (phase schedules, Rice–Mele band-model benchmark data + README), `rice_mele_reference/lohes_experience/` (quantitative reference for the Lohse 2016 paper lattice: J₁/J₂/Δ, gaps, adiabatic times, gap-adaptive schedules in both conventions + HTML report), `successful_case/Vs3Vl3_3_3/` (Jupyter density-movie notebook and HTML report over the good run's snapshots.csv), `reference/` (papers).
 
 ## Notes
 
