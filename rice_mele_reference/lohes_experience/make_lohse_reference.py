@@ -572,7 +572,9 @@ def main():
     with open(HERE / "gap_adaptive_lohse_maincpp_schedule.csv", "w") as f:
         f.write("# same schedule mapped to the ECG main.cpp convention\n")
         f.write("# V^m = -Vs^m cos(4 pi x/a) - Vl^m cos(2 pi x/a + phi^m),\n")
-        f.write("# Vs^m = Vs/2, Vl^m = Vl/2, phi^m(s) = 3 pi/2 - phi(s)  (pumps -a/cycle)\n")
+        f.write("# Vs^m = Vs/2, Vl^m = Vl/2, phi^m(s) = 3 pi/2 - phi(s), DECREASING.\n")
+        f.write("# Pumps +a/cycle like the paper (the frame map is a pure translation;\n")
+        f.write("# only an INCREASING phi^m drive, like the Vs3Vl3 run, pumps -a).\n")
         f.write("s,phi\n")
         for si, pi_ in zip(s_grid, PHIG):
             f.write(f"{si:.12f},{3*np.pi/2 - pi_:.12f}\n")

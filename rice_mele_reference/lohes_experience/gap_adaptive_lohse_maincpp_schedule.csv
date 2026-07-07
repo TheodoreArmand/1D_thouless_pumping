@@ -1,6 +1,8 @@
 # same schedule mapped to the ECG main.cpp convention
 # V^m = -Vs^m cos(4 pi x/a) - Vl^m cos(2 pi x/a + phi^m),
-# Vs^m = Vs/2, Vl^m = Vl/2, phi^m(s) = 3 pi/2 - phi(s)  (pumps -a/cycle)
+# Vs^m = Vs/2, Vl^m = Vl/2, phi^m(s) = 3 pi/2 - phi(s), DECREASING.
+# Pumps +a/cycle like the paper (the frame map is a pure translation;
+# only an INCREASING phi^m drive, like the Vs3Vl3 run, pumps -a).
 s,phi
 0.000000000000,4.712388980385
 0.006946866793,4.711341782833

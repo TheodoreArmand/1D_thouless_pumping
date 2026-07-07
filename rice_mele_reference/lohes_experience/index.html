@@ -264,9 +264,12 @@
       \varphi^{m}=-\varphi-\frac{\pi}{2}\;\;(\mathrm{mod}\ 2\pi).
       \]
       <div class="note">
-        论文 \(\varphi: 0\to 2\pi\)（COM 走 \(+d_l\)）对应 \(\varphi^{m}\) 减小 \(2\pi\)；
-        反过来 main.cpp 里 \(\varphi^{m}: 0\to 2\pi\) 递增就对应反向泵浦 \(-a\)/cycle ——
-        这正是 Vs3/Vl3 ECG 成功案例里 \(\Delta P/a = -0.997\) 的方向。
+        论文 \(\varphi: 0\to 2\pi\)（COM 走 \(+d_l\)）对应 \(\varphi^{m}\) 从 \(3\pi/2\) <b>递减</b> \(2\pi\)。
+        坐标映射是纯平移，不改变输运方向：用本目录的递减 schedule 驱动 main.cpp，包同样泵
+        \(+a\)/cycle。反过来，main.cpp 里 \(\varphi^{m}: 0\to 2\pi\) <b>递增</b>才对应反向泵浦
+        \(-a\)/cycle —— 那是 Vs3/Vl3 ECG 成功案例里 \(\Delta P/a = -0.997\) 的方向
+        （微观判据：\(\Delta(\varphi^{m}) = -2\tilde V_l\cos\varphi^{m}\)，
+        \(\varphi^{m}\) 略低于 \(3\pi/2\) 时 \(x{=}4\) 位点下沉，原子从 0 隧穿到 4，向 \(+x\) 走）。
         能隙最小点也随之从论文约定的 \(\varphi=0,\pi\) 移到 main.cpp 约定的
         \(\varphi^{m}=\pi/2,\,3\pi/2\)。
       </div>
