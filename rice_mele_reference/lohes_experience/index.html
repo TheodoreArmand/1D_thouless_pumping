@@ -174,7 +174,7 @@
     </div>
     <div class="card">
       <div class="label">绝热周期（\(P_0\ge 0.99\)）</div>
-      <div class="value">__T99UNI__&pi; → __T99ADA__&pi;</div>
+      <div class="value">\(4000\pi \to 150\pi\)</div>
       <div class="sub">均匀驱动 → gap-adaptive；单位 \(\hbar/E_{r,s}\)</div>
     </div>
   </section>
@@ -272,10 +272,12 @@
       </div>
     </div>
     <div class="callout">
-      想用 ECG/TDVP 代码跑 Lohse 晶格：main.cpp 的余弦振幅按代码反冲能
-      \(E_R^{\mathrm{code}}=E_{r,l}\) 归一，所以应配置
-      \(V_s^{m} = 5\,E_{r,s} = 20\,E_{r,l}\)、\(V_l^{m} = 2.5\,E_{r,s} = 10\,E_{r,l}\)，
-      即 <code>set_lattice_depths_over_recoil(cfg, 20.0, 10.0)</code>，
+      想用 ECG/TDVP 代码跑 Lohse 晶格：<code>pump_config.cpp</code> 里的
+      <code>recoil_energy</code> 用 \(k = 2\pi/a = \pi/d_s\)，正是短晶格反冲能
+      \(E_R^{\mathrm{code}} = E_{r,s}\)（\(a=8\) 时数值 \(\pi^2/32 \approx 0.3084\)）；
+      而 main.cpp 的 <code>pump_terms_at</code> 把 <code>cfg.Vs</code> 直接当余弦振幅。
+      所以应配置振幅 \(V_s^{m} = V_s/2 = 5\,E_{r,s}\)、\(V_l^{m} = V_l/2 = 2.5\,E_{r,s}\)，
+      即 <code>set_lattice_depths_over_recoil(cfg, 5.0, 2.5)</code>，
       相位 schedule 用本目录 <code>gap_adaptive_lohse_maincpp_schedule.csv</code>
       （已按 \(\varphi^{m}(s)=3\pi/2-\varphi(s)\) 换算好）。
     </div>
@@ -468,37 +470,39 @@
       <tr>
         <td>均匀 \(\dot\varphi=\mathrm{const}\)</td>
         <td>\(P_0\ge 0.99\)</td>
-        <td class="num">≳ __T99UNI__&pi;</td>
-        <td class="num">≈ __T99UNI_MS__ ms/cycle</td>
-        <td class="num">T ≈ __T99UNI_CODE__&pi;</td>
+        <td class="num">\(\gtrsim 4000\pi\)</td>
+        <td class="num">≈ 513 ms/cycle</td>
+        <td class="num">\(T \approx 12970\pi\)</td>
       </tr>
       <tr>
         <td>gap-adaptive \(\dot\varphi\propto g^2\)</td>
         <td>\(P_0\ge 0.99\)</td>
-        <td class="num">≈ __T99ADA__&pi;</td>
-        <td class="num">≈ __T99ADA_MS__ ms/cycle</td>
-        <td class="num">T ≈ __T99ADA_CODE__&pi;</td>
+        <td class="num">\(\approx 150\pi\)</td>
+        <td class="num">≈ 19 ms/cycle</td>
+        <td class="num">\(T \approx 486\pi\)</td>
       </tr>
       <tr>
         <td>gap-adaptive \(\dot\varphi\propto g^2\)</td>
         <td>\(P_0\ge 0.999\)</td>
-        <td class="num">≈ __T999ADA__&pi;</td>
-        <td class="num">≈ __T999ADA_MS__ ms/cycle</td>
-        <td class="num">T ≈ __T999ADA_CODE__&pi;</td>
+        <td class="num">\(\approx 300\pi\)</td>
+        <td class="num">≈ 38 ms/cycle</td>
+        <td class="num">\(T \approx 973\pi\)</td>
       </tr>
     </table>
     <p style="margin-top:12px">
       三点解读：
     </p>
     <ul>
-      <li><b>均匀驱动大约要 \(T\gtrsim\) __T99UNI__\(\pi\,\hbar/E_{r,s}\)</b>（安全系数 ≈ 5–6 倍于
-        \(2\pi\eta\)）。而且逼近不是单调的：波包每周期两次穿过最小隙（\(\varphi=0,\pi\)），
-        产生 Stückelberg 干涉振荡（图 6 的红线摆动）。</li>
-      <li><b>gap-adaptive schedule 把它压缩约一个数量级</b>：让 \(\dot\varphi\propto g(\varphi)^2\)，
-        激发率 \(r\) 全程近似恒定，"隙小就爬、隙大就冲"。\(T=400\pi\) 时已 \(P_0=0.999\)。</li>
+      <li><b>均匀驱动大约要 \(T\gtrsim 4000\pi\,\hbar/E_{r,s}\)</b>，即裸 LZ 尺度再乘约 11 倍的
+        安全系数。而且逼近不是单调的：波包每周期两次穿过最小隙（\(\varphi=0,\pi\)），
+        产生 Stückelberg 干涉振荡（图 6 的红线摆动，如 \(T=200\pi\) 处 \(P_0\) 反而跌到 0.51）。</li>
+      <li><b>gap-adaptive schedule 把它压缩约 27 倍（\(4000\pi\to 150\pi\)）</b>：让
+        \(\dot\varphi\propto g(\varphi)^2\)，激发率 \(r\) 全程近似恒定，"隙小就爬、隙大就冲"。
+        \(T=150\pi\) 即 \(P_0=0.997\)，\(300\pi\) 即 0.999。</li>
       <li>换算成实验时间尺度（\(\hbar/E_{r,s}=40.8\,\mu s\)，\(\pi\hbar/E_{r,s}=0.128\) ms）：
-        均匀绝热周期 ≈ 数百 ms，这解释了论文效率 97.9%/半周期 —— 实验用的周期处于
-        "接近但未完全绝热"的区间，属合理的实验折中。</li>
+        均匀驱动的完全绝热周期 ≈ 0.5 s。反过来，论文测得的 97.9(2)%/半周期效率
+        （约 4%/整周期泄漏）恰好对应本扫描 \(T\approx 2000\pi\)（≈ 256 ms）附近的均匀驱动
+        —— 与实验 ramp 的时间量级自洽，属"接近但未完全绝热"的合理实验折中。</li>
     </ul>
     <figure>
       <img src="figs/fig6_adiabatic_time_scan.png" alt="adiabatic time scan">
@@ -515,7 +519,10 @@
     <p>
       与 <code>rice_mele_reference/Vs3Vl3_3_3/figs/gap_adaptive_grid_Vs3Vl3_maincpp.png</code>
       同款三联图，但换成 Lohse 晶格（论文约定，\(\varphi:0\to 2\pi\)，理想输运 \(+d_l\)/cycle）。
-      初态是 \(\varphi=0\) 的带 0 Wannier 波包，分裂步 TDSE 演化一整周期：
+      初态是 \(\varphi=0\) 的带 0 Wannier 波包，分裂步 TDSE 演化一整周期。
+      位移取速度期望值的时间积分 \(\int_0^t\langle \hat p\rangle/m\,dt'\)
+      （Ehrenfest 流；在周期环上比朴素的 \(\langle x\rangle\) 稳健 ——
+      长时间演化时色散会把波包摊开绕环一圈，朴素均值会假性回退）：
     </p>
     <figure>
       <img src="figs/fig5_gap_adaptive_pump.png" alt="gap adaptive pump demo T=400pi">
@@ -533,15 +540,15 @@
       <img src="figs/fig7_uniform_T2000pi.png" alt="uniform pump at T=2000pi">
       <figcaption>
         图 7（同款图，\(T=2000\pi\approx 256\) ms）：把周期拉长约 5 倍后，均匀驱动也接近绝热
-        （\(P_0=\) __P0_U2000__，\(f=\) __F_U2000__），红绿两线几乎重合 ——
+        （\(P_0=\) 0.960，\(f=\) +0.936），红绿两线几乎重合 ——
         与 Vs3/Vl3 参考图在 \(T=160\pi\)（其单位）下"两种驱动都绝热"的形态对应。
       </figcaption>
     </figure>
     <div class="callout ok">
       一句话结论：<b>Lohse 晶格（\(V_s=10\,E_{r,s},\ V_l=5\,E_{r,s}\)）的泵浦瓶颈是
-      \(\varphi=0,\pi\) 处 \(0.111\,E_{r,s}\) 的小隙。均匀驱动要 \(T\gtrsim\) __T99UNI__\(\pi\,\hbar/E_{r,s}\)
-      （≈ __T99UNI_MS__ ms）才能 \(P_0\ge0.99\)；用 \(\dot\varphi\propto g^2\) 的 gap-adaptive
-      schedule 只需 \(T\approx\) __T99ADA__\(\pi\)（≈ __T99ADA_MS__ ms），\(400\pi\) 即达 99.9%。</b>
+      \(\varphi=0,\pi\) 处 \(0.111\,E_{r,s}\) 的小隙。均匀驱动要 \(T\gtrsim\) 4000\(\pi\,\hbar/E_{r,s}\)
+      （≈ 513 ms）才能 \(P_0\ge0.99\)；用 \(\dot\varphi\propto g^2\) 的 gap-adaptive
+      schedule 只需 \(T\approx\) 150\(\pi\)（≈ 19 ms），\(300\pi\)（≈ 38 ms）即达 99.9%。</b>
     </div>
   </section>
 
@@ -567,8 +574,8 @@
       <tr><td>\(E_{r,s}/h\)（\(^{87}\mathrm{Rb}\), \(\lambda_s=767\) nm）</td><td class="num">3.902 kHz</td></tr>
       <tr><td>\(\hbar/E_{r,s}\)</td><td class="num">40.79 μs；\(\pi\hbar/E_{r,s} = 0.1281\) ms</td></tr>
       <tr><td>\(E_{r,l}\)</td><td class="num">\(E_{r,s}/4\)（故 \(V_l = 20\,E_{r,l} = 5\,E_{r,s}\)）</td></tr>
-      <tr><td>ECG 代码时间（\(\hbar=m=1,\ a=8\)）</td><td class="num">\(T_{\mathrm{code}} = (8/\pi^2)\,T[\hbar/E_{r,s}] = 0.8106\,T\)；如 \(T=400\pi\hbar/E_{r,s} \Rightarrow 324\pi\) code units</td></tr>
-      <tr><td>对照：Vs3/Vl3 成功案例 \(T=160\pi\) code units</td><td class="num">\(=197\pi\,\hbar/E_{r,s}\)（但那是浅得多、相对隙大得多的晶格）</td></tr>
+      <tr><td>ECG 代码时间（\(\hbar=m=1,\ a=8\)，\(E_{r,s}=\pi^2/32\)）</td><td class="num">\(T_{\mathrm{code}} = (32/\pi^2)\,T[\hbar/E_{r,s}] = 3.242\,T\)；如 gap-adaptive 绝热的 \(T=150\pi\,\hbar/E_{r,s} \Rightarrow 486\pi \approx 1529\) code units（dt=0.002 时约 76 万步）</td></tr>
+      <tr><td>对照：Vs3/Vl3 成功案例 \(T=160\pi\) code units</td><td class="num">\(= 49.3\pi\,\hbar/E_{r,s}\)（但那是浅得多、相对隙大得多的晶格，不能直接比）</td></tr>
     </table>
   </section>
 </main>

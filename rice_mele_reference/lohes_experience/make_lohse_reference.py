@@ -70,11 +70,11 @@ LAMBDA_S = 767.0e-9
 E_RS_J = H_PLANCK**2 / (2 * M_RB87 * LAMBDA_S**2)
 E_RS_HZ = E_RS_J / H_PLANCK                # E_rs/h in Hz
 T_UNIT_S = HBAR / E_RS_J                   # one time unit (hbar/E_rs) in s
-# ECG main.cpp units: hbar=m=1, a=8 -> E_rs^code = (pi/2)^2/2 = pi^2/8
-T_CODE_PER_UNIT = 1.0 / (np.pi**2 / 8.0)   # inverse: T_code = T_ours / (pi^2/8)?  see note
-# NOTE: E_rs expressed in code units is pi^2/8 ~ 1.2337, so one of our time
-# units (hbar/E_rs) equals 1/1.2337 = 0.8106 code time units.
-T_CODE_FACTOR = 8.0 / np.pi**2             # multiply T[hbar/E_rs] by this -> code units
+# ECG main.cpp units: hbar=m=1, a=8 -> d_s=4, k_s=pi/d_s=pi/4, so the code
+# recoil (pump_config.cpp: k_s = 2*pi/a) IS the short-lattice recoil:
+# E_rs^code = (pi/4)^2/2 = pi^2/32 ~ 0.3084. One of our time units (hbar/E_rs)
+# equals 32/pi^2 = 3.2423 code time units.
+T_CODE_FACTOR = 32.0 / np.pi**2            # multiply T[hbar/E_rs] by this -> code units
 
 # ---------------------------------------------------------------------------
 # house style (matches the Vs3Vl3 reference figures)
@@ -512,8 +512,8 @@ def fig_scan(scan):
     ax.set_xlabel(r"pump cycle time $T\ [\pi\,\hbar/E_{r,s}]$")
     ax.set_ylabel("final-state metric")
     ax.set_ylim(0, 1.08)
-    ax.set_title(r"How long to be adiabatic? uniform needs $T\gtrsim 4000\pi$; "
-                 r"gap-adaptive reaches $P_0{\ge}0.99$ near $150\pi$")
+    ax.set_title(r"How long to be adiabatic? uniform needs $T \geq 4000\pi$; "
+                 r"gap-adaptive reaches $P_0 \geq 0.99$ near $150\pi$")
     ax.legend(loc="lower right", fontsize=9.5, ncol=1)
     return fig
 
