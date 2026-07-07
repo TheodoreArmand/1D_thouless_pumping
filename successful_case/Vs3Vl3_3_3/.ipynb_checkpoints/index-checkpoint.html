@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vs3/Vl3 3/3 Thouless Pump 成功案例</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172026;
+      --muted: #5c6974;
+      --line: #d7dde3;
+      --bg: #f7f8fa;
+      --panel: #ffffff;
+      --blue: #195f9b;
+      --green: #2d7254;
+      --red: #a64545;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.55;
+    }
+    header, main {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+    header {
+      padding-top: 40px;
+      padding-bottom: 18px;
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(28px, 4vw, 42px);
+      letter-spacing: 0;
+    }
+    h2 {
+      margin: 36px 0 14px;
+      font-size: 22px;
+      letter-spacing: 0;
+    }
+    p { margin: 0 0 12px; }
+    a { color: var(--blue); }
+    code {
+      padding: 1px 4px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: #f1f4f6;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.94em;
+    }
+    .lead {
+      max-width: 860px;
+      color: var(--muted);
+      font-size: 17px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin: 18px 0;
+    }
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 14px 16px;
+    }
+    .metric strong {
+      display: block;
+      font-size: 22px;
+      line-height: 1.2;
+      margin-bottom: 6px;
+    }
+    .metric span {
+      color: var(--muted);
+      font-size: 14px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      width: 220px;
+      background: #eef2f5;
+      font-weight: 650;
+    }
+    tr:last-child th, tr:last-child td { border-bottom: 0; }
+    figure {
+      margin: 18px 0 0;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+    }
+    figure img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 4px;
+    }
+    figcaption {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .note {
+      border-left: 4px solid var(--green);
+      background: #eef7f2;
+      padding: 12px 14px;
+      margin: 18px 0;
+    }
+    .warn {
+      border-left-color: var(--red);
+      background: #fff3f3;
+    }
+    ul {
+      margin: 8px 0 0;
+      padding-left: 22px;
+    }
+    li { margin: 6px 0; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Vs3/Vl3 3/3 Thouless Pump 成功案例</h1>
+    <p class="lead">
+      这个目录记录当前可复现的 3/3 案例：N=1、K=16、a=8、Vs=Vl=3Er、
+      T=160π、固定 RK4 步长 dt=0.002，并由 CSV schedule 指定泵浦相位
+      φ(t)。旧工程报告中的结论是 gap-adaptive schedule 完成完整周期，泵浦位移接近
+      一个晶格常数。
+    </p>
+  </header>
+
+  <main>
+    <section>
+      <h2>结果摘要</h2>
+      <div class="grid">
+        <div class="metric">
+          <strong>-0.9973555596</strong>
+          <span>Δ polarization / lattice cell</span>
+        </div>
+        <div class="metric">
+          <strong>251328</strong>
+          <span>RK4 steps</span>
+        </div>
+        <div class="metric">
+          <strong>10055</strong>
+          <span>snapshot / trace samples</span>
+        </div>
+        <div class="metric">
+          <strong>2.22e-16</strong>
+          <span>relative norm drift</span>
+        </div>
+      </div>
+
+      <table>
+        <tr>
+          <th>运行目录</th>
+          <td><a href="../../out/pump_vs3pad_gapadaptive_T160pi/a8p000_K16_tmax502p655_VsER3p000_VlER3p000/">out/pump_vs3pad_gapadaptive_T160pi/a8p000_K16_tmax502p655_VsER3p000_VlER3p000/</a></td>
+        </tr>
+        <tr>
+          <th>配置</th>
+          <td><a href="../../out/pump_vs3pad_gapadaptive_T160pi/a8p000_K16_tmax502p655_VsER3p000_VlER3p000/config.txt">config.txt</a></td>
+        </tr>
+        <tr>
+          <th>summary</th>
+          <td><a href="../../out/pump_vs3pad_gapadaptive_T160pi/a8p000_K16_tmax502p655_VsER3p000_VlER3p000/summary.txt">summary.txt</a></td>
+        </tr>
+        <tr>
+          <th>trace</th>
+          <td><a href="../../out/pump_vs3pad_gapadaptive_T160pi/a8p000_K16_tmax502p655_VsER3p000_VlER3p000/trace.csv">trace.csv</a></td>
+        </tr>
+        <tr>
+          <th>wavefunction snapshots</th>
+          <td><a href="../../out/pump_vs3pad_gapadaptive_T160pi/a8p000_K16_tmax502p655_VsER3p000_VlER3p000/snapshots.csv">snapshots.csv</a></td>
+        </tr>
+        <tr>
+          <th>3/3 RM reference</th>
+          <td><a href="../../rice_mele_reference/Vs3Vl3_3_3/">rice_mele_reference/Vs3Vl3_3_3/</a></td>
+        </tr>
+        <tr>
+          <th>旧参考报告</th>
+          <td><a href="../../../periodic/ecg_gapadaptive_T160pi_progress_report.html">periodic/ecg_gapadaptive_T160pi_progress_report.html</a></td>
+        </tr>
+      </table>
+
+      <div class="note">
+        重构后做过短程回归：前 25 个 RK4 步对应的 `snapshots.csv` 片段和旧输出逐字节一致。
+      </div>
+    </section>
+
+    <section>
+      <h2>主要物理和数值信息</h2>
+      <table>
+        <tr><th>体系</th><td>1D ECG Thouless pump, one particle, K=16 Gaussian basis</td></tr>
+        <tr><th>势能</th><td>legacy PRB cosine double-well, Vs=3Er, Vl=3Er</td></tr>
+        <tr><th>时间</th><td>T=160π, total_time=160π, dt=0.002</td></tr>
+        <tr><th>相位</th><td>CSV schedule: <code>rice_mele_reference/Vs3Vl3_3_3/gap_adaptive_vs3vl3_maincpp_schedule.csv</code></td></tr>
+        <tr><th>极化位移</th><td>start=-0.0001657124, end=-0.9975212721, delta=-0.9973555596</td></tr>
+        <tr><th>能量漂移</th><td>relative drift=9.550359e-4</td></tr>
+        <tr><th>条件数控制</th><td>max actual solve cond=9999.9957, min actual solve rank=16</td></tr>
+        <tr><th>宽度监控</th><td>min Re(B)=0.0227284, min Re(A+B)=0.0227284</td></tr>
+      </table>
+    </section>
+
+    <section>
+      <h2>参考图</h2>
+      <figure>
+        <img src="../../rice_mele_reference/Vs3Vl3_3_3/figs/gap_adaptive_grid_Vs3Vl3_maincpp.png" alt="Vs3/Vl3 gap adaptive grid">
+        <figcaption>Vs3/Vl3 gap-adaptive grid，和当前 main.cpp 相位约定对齐。</figcaption>
+      </figure>
+      <figure>
+        <img src="../../rice_mele_reference/Vs3Vl3_3_3/figs/grid_rm_curves_Vs3Vl3.png" alt="Vs3/Vl3 Rice-Mele curves">
+        <figcaption>Vs3/Vl3 Rice-Mele 参考曲线。</figcaption>
+      </figure>
+    </section>
+
+    <section>
+      <h2>视频和拖动查看</h2>
+      <p>
+        打开 <a href="wavefunction_density_movie.ipynb">wavefunction_density_movie.ipynb</a>，它会读取
+        `snapshots.csv`，按每个 snapshot 重建 N=1 ECG 波函数的 density，并生成可拖动的单帧图和
+        `density_evolution.mp4` 或 `density_evolution.gif`。
+      </p>
+      <p>
+        如果只想直接重新生成视频，可以运行 <code>python3 successful_case/Vs3Vl3_3_3/make_density_movie.py</code>。
+      </p>
+      <div class="note warn">
+        notebook 里的 density 是从保存的 ECG 参数重建出来的可视化图，适合看波包形状和漂移；
+        物理量判断仍以 `trace.csv` 和 `summary.txt` 为准。
+      </div>
+    </section>
+  </main>
+</body>
+</html>

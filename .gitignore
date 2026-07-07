@@ -1,0 +1,14 @@
+/build/
+/out/
+/.ipynb_checkpoints/
+
+*.o
+*.o.d
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+
+.DS_Store
+*.swp

@@ -1,0 +1,59 @@
+cmake_minimum_required(VERSION 3.16)
+project(ecg1d_thouless_pumping LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+find_package(Eigen3 QUIET NO_MODULE)
+if(NOT Eigen3_FOUND)
+    find_path(EIGEN3_INCLUDE_DIR Eigen/Core PATHS /usr/include/eigen3 /usr/local/include/eigen3)
+    if(NOT EIGEN3_INCLUDE_DIR)
+        message(FATAL_ERROR "Eigen3 not found. Install Eigen or provide Eigen3_DIR/EIGEN3_INCLUDE_DIR.")
+    endif()
+endif()
+
+find_package(OpenMP REQUIRED)
+
+set(ECG_SRC
+    src/basis_params.cpp
+    src/csv_utils.cpp
+    src/derivatives.cpp
+    src/hamiltonian.cpp
+    src/hamiltonian_gradient.cpp
+    src/interaction_kernels.cpp
+    src/observable_derivatives.cpp
+    src/pair_cache.cpp
+    src/permutation.cpp
+    src/realtime_tdvp.cpp
+    src/run_report.cpp
+    src/snapshot_io.cpp
+    src/tdvp_solver.cpp
+    src/trace_io.cpp
+)
+
+set(PUMPCONFIG_SRC
+    pumpconfig/pump_config.cpp
+    pumpconfig/legacy_prb_3_3.cpp
+)
+
+add_executable(ecg1d_thouless_pumping
+    main.cpp
+    ${PUMPCONFIG_SRC}
+    ${ECG_SRC}
+)
+
+target_include_directories(ecg1d_thouless_pumping PRIVATE
+    ${PROJECT_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/src
+)
+
+if(Eigen3_FOUND)
+    target_link_libraries(ecg1d_thouless_pumping PRIVATE Eigen3::Eigen OpenMP::OpenMP_CXX)
+else()
+    target_include_directories(ecg1d_thouless_pumping PRIVATE ${EIGEN3_INCLUDE_DIR})
+    target_link_libraries(ecg1d_thouless_pumping PRIVATE OpenMP::OpenMP_CXX)
+endif()
+
+target_compile_definitions(ecg1d_thouless_pumping PRIVATE EIGEN_DONT_PARALLELIZE)
+target_compile_options(ecg1d_thouless_pumping PRIVATE -O2 -march=x86-64-v3)
