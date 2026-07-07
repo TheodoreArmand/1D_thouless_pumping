@@ -2,6 +2,7 @@
 
 #include "physical_constants.hpp"
 #include "pumpconfig/legacy_prb_3_3.hpp"
+#include "pumpconfig/lohse_10_5.hpp"
 
 #include <cmath>
 #include <stdexcept>
@@ -38,13 +39,17 @@ PumpConfig make_pump_config(const std::string& name) {
     if (name == "legacy_prb_3_3") {
         return make_legacy_prb_3_3_config();
     }
+    if (name == "lohse_10_5") {
+        return make_lohse_10_5_config();
+    }
 
     throw std::runtime_error(
-        "unknown pump config '" + name + "'. Available configs: legacy_prb_3_3");
+        "unknown pump config '" + name
+        + "'. Available configs: legacy_prb_3_3, lohse_10_5");
 }
 
 std::vector<std::string> available_pump_configs() {
-    return {"legacy_prb_3_3"};
+    return {"legacy_prb_3_3", "lohse_10_5"};
 }
 
 }  // namespace pumpconfig

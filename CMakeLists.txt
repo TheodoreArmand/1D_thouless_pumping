@@ -35,6 +35,7 @@ set(ECG_SRC
 set(PUMPCONFIG_SRC
     pumpconfig/pump_config.cpp
     pumpconfig/legacy_prb_3_3.cpp
+    pumpconfig/lohse_10_5.cpp
 )
 
 add_executable(ecg1d_thouless_pumping
