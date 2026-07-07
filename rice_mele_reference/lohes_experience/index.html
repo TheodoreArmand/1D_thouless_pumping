@@ -282,7 +282,10 @@
       所以应配置振幅 \(V_s^{m} = V_s/2 = 5\,E_{r,s}\)、\(V_l^{m} = V_l/2 = 2.5\,E_{r,s}\)，
       即 <code>set_lattice_depths_over_recoil(cfg, 5.0, 2.5)</code>，
       相位 schedule 用本目录 <code>gap_adaptive_lohse_maincpp_schedule.csv</code>
-      （已按 \(\varphi^{m}(s)=3\pi/2-\varphi(s)\) 换算好）。
+      （已按 \(\varphi^{m}(s)=3\pi/2-\varphi(s)\) 换算好，泵 \(+a\)/cycle）。
+      这套配置已就绪：<code>pumpconfig/lohse_10_5.cpp</code>（\(T=500\pi\) code units）
+      + 初态 <code>initial_state/Vs10Ers_Vl5Ers/initial_lohse_N1_K16.csv</code>
+      （由 <code>make_lohse_initial_basis.py</code> 生成）。
     </div>
     <figure>
       <img src="figs/fig1_potential.png" alt="V(x,phi) snapshots">

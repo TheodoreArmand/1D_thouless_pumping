@@ -12,7 +12,12 @@
 - `lohse_reference_data.npz` / `lohse_reference_summary.json`: 计算结果。
 - `gap_adaptive_lohse_schedule.csv`: 论文约定的 gap-adaptive 相位 schedule（`s,phi`）。
 - `gap_adaptive_lohse_maincpp_schedule.csv`: 换算到 main.cpp 约定
-  （`phi^m(s) = 3pi/2 - phi(s)`），可直接给 ECG 二进制读。
+  （`phi^m(s) = 3pi/2 - phi(s)`，递减，泵 +a/cycle —— 与 3/3 案例的 -a 相反）。
+- `make_lohse_initial_basis.py`: 生成 ECG 初态
+  `initial_state/Vs10Ers_Vl5Ers/initial_lohse_N1_K16.csv`
+  （band-0 Wannier 拟合，fidelity 0.9989，path-pad 铺向 +x）。
+- 对应的 C++ 配置：`pumpconfig/lohse_10_5.cpp`（T=500pi code units，已 smoke test：
+  初始能量与本目录 Python 预测吻合到 1e-7）。
 - `figs/`: 全部由脚本生成。
 
 ## System
