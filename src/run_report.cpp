@@ -76,8 +76,12 @@ void write_config_txt(const std::string& path, const pumpconfig::PumpConfig& cfg
       << "phase=phi=interpolate_phase_schedule(t/pump_period)\n"
       << "expanded_potential_without_constant=" << cfg.expanded_potential_label << "\n"
       << "lambda_C=" << cfg.lambda_C << "\n"
-      << "rcond=" << cfg.rcond << "\n"
-      << "snapshot_every=" << cfg.snapshot_every << "\n"
+      << "rcond=" << cfg.rcond << "\n";
+    if (cfg.N >= 2) {
+        f << "g_gauss_over_Er_s=" << cfg.g_gauss_over_Er << "\n"
+          << "sigma_gauss_code=" << cfg.sigma_gauss << "\n";
+    }
+    f << "snapshot_every=" << cfg.snapshot_every << "\n"
       << "trace_every=" << cfg.trace_every << "\n"
       << "snapshot_buffered=1"
       << "  # snapshots buffered in memory, snapshots.csv written once at end\n"
@@ -168,6 +172,10 @@ void write_run_summary_txt(const std::string& path,
       << "x2_start=" << x2_start << "\n"
       << "x2_end=" << x2_end << "\n"
       << "x2_growth_ratio=" << x2_growth_ratio << "\n";
+    if (!trace.V_gauss.empty()) {
+        f << "V_gauss_start=" << trace.V_gauss.front() << "\n"
+          << "V_gauss_end=" << trace.V_gauss.back() << "\n";
+    }
 }
 
 }  // namespace ecg1d

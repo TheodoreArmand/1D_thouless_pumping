@@ -16,8 +16,17 @@
 - `make_lohse_initial_basis.py`: 生成 ECG 初态
   `initial_state/Vs10Ers_Vl5Ers/initial_lohse_N1_K16.csv`
   （band-0 Wannier 拟合，fidelity 0.9989，path-pad 铺向 +x）。
+- `make_lohse_initial_basis_n2.py`: 生成 N=2 adjacent-cell ECG 初态
+  `initial_state/Vs10Ers_Vl5Ers/initial_lohse_N2_K24.csv`。这是两个 band-0
+  Wannier packet（中心 x≈2 和 x≈10）的 bosonic symmetrized product；当前
+  grid fidelity 约 0.9908，初始 free energy 约 -1.43891916。
+- `n2_grid_reference.py`: N=2 split-step Fourier 参考脚本。默认是短验证窗口
+  `tmax=12`，可用 `--g-over-Er 0.3 --grid 1024` 生成 Gaussian 参考曲线。
 - 对应的 C++ 配置：`pumpconfig/lohse_10_5.cpp`（T=500pi code units，已 smoke test：
   初始能量与本目录 Python 预测吻合到 1e-7）。
+- N=2 C++ targets: `ecg1d_2ninteraction` 和 `ecg1d_2gaussian`，配置在
+  `pumpconfig/lohse_n2_free.cpp` / `pumpconfig/lohse_n2_gauss.cpp`。它们只做
+  short validation；full-cycle N=2 需要后续 PairCache memoization。
 - `figs/`: 全部由脚本生成。
 
 ## System

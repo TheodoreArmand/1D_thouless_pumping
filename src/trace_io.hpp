@@ -19,6 +19,9 @@ struct Trace {
     std::vector<double> V_cos;
     std::vector<double> V_const;
     std::vector<double> V_lattice;
+    // Present only for N >= 2 samples. write_trace_csv appends the column
+    // when this vector is populated, preserving the legacy N=1 trace schema.
+    std::vector<double> V_gauss;
     std::vector<double> x_mean;
     std::vector<double> p_mean;
     std::vector<double> x2;

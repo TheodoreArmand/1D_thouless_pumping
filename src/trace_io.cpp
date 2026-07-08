@@ -1,6 +1,7 @@
 #include "trace_io.hpp"
 
 #include "hamiltonian.hpp"
+#include "interaction_kernels.hpp"
 #include "pair_cache.hpp"
 #include "permutation.hpp"
 #include "physical_constants.hpp"
@@ -13,21 +14,27 @@
 namespace ecg1d {
 
 WidthMonitors compute_width_monitors(const std::vector<BasisParams>& basis) {
+    // Min over basis functions k AND particles a of the diagonal widths.
+    // argmin encodes both as k*N + a (equals k for N = 1, so the N = 1
+    // trace output is unchanged).
     WidthMonitors w;
     double best_b = std::numeric_limits<double>::infinity();
     double best_ab = std::numeric_limits<double>::infinity();
     for (int k = 0; k < static_cast<int>(basis.size()); ++k) {
-        const double reB = basis[k].B(0, 0).real();
-        const double reAB = (basis[k].A(0, 0) + basis[k].B(0, 0)).real();
-        if (reB < best_b) {
-            best_b = reB;
-            w.min_re_B = reB;
-            w.argmin_re_B = k;
-        }
-        if (reAB < best_ab) {
-            best_ab = reAB;
-            w.min_re_AplusB = reAB;
-            w.argmin_re_AplusB = k;
+        const int N = basis[k].N();
+        for (int a = 0; a < N; ++a) {
+            const double reB = basis[k].B(a, a).real();
+            const double reAB = (basis[k].A(a, a) + basis[k].B(a, a)).real();
+            if (reB < best_b) {
+                best_b = reB;
+                w.min_re_B = reB;
+                w.argmin_re_B = k * N + a;
+            }
+            if (reAB < best_ab) {
+                best_ab = reAB;
+                w.min_re_AplusB = reAB;
+                w.argmin_re_AplusB = k * N + a;
+            }
         }
     }
     return w;
@@ -44,11 +51,16 @@ void sample_observables(const std::vector<BasisParams>& basis,
     const Cd V_raw = general_cosine_functional(basis, terms.cosine_terms);
     const Cd E = compute_total_energy(basis, terms);
     const double V_const = terms.one_body_constant * basis[0].N();
+    const int N = basis[0].N();
+    const bool include_v_gauss = (N >= 2);
+    const double V_gauss = (include_v_gauss && terms.gaussian)
+        ? (Gaussian_interaction_functional(basis) / S).real()
+        : 0.0;
 
     double x_mean_v = 0.0;
     double p_mean_v = 0.0;
     const int K = static_cast<int>(basis.size());
-    const PermutationSet perms = PermutationSet::generate(basis[0].N());
+    const PermutationSet perms = PermutationSet::generate(N);
     {
         Cd amp_x(0.0, 0.0);
         Cd amp_p(0.0, 0.0);
@@ -84,7 +96,9 @@ void sample_observables(const std::vector<BasisParams>& basis,
                 Cd term(0.0, 0.0);
                 for (int p = 0; p < perms.SN; ++p) {
                     PairCache c = PairCache::build(basis[i], basis[j], perms.matrices[p]);
-                    const Cd second = 0.5 * c.K_inv(0, 0) + c.mu(0) * c.mu(0);
+                    // sum_a <x_a^2> kernel; for N = 1 this equals the old
+                    // expression 0.5*K_inv(0,0) + mu(0)*mu(0) bit-for-bit.
+                    const Cd second = compute_rTr_Mij(c);
                     term += static_cast<double>(perms.signs[p]) * c.M_G * second;
                 }
                 amp_x2 += conj_ui * basis[j].u * term;
@@ -101,6 +115,7 @@ void sample_observables(const std::vector<BasisParams>& basis,
     trace.V_cos.push_back((V_raw / S).real());
     trace.V_const.push_back(V_const);
     trace.V_lattice.push_back((V_raw / S).real() + V_const);
+    if (include_v_gauss) trace.V_gauss.push_back(V_gauss);
     trace.x_mean.push_back(x_mean_v);
     trace.p_mean.push_back(p_mean_v);
     trace.x2.push_back(x2);
@@ -130,10 +145,16 @@ void append_trace_diagnostics(Trace& trace,
 void write_trace_csv(const std::string& path, const Trace& tr) {
     std::ofstream f(path);
     if (!f.is_open()) throw std::runtime_error("cannot open " + path);
+    const bool include_v_gauss = !tr.V_gauss.empty();
+    if (include_v_gauss && tr.V_gauss.size() != tr.t.size()) {
+        throw std::runtime_error("trace V_gauss length does not match sample count");
+    }
     f << "t,phi,norm,E_total,T_kin,V_cos,V_const,V_lattice,x_mean,p_mean,x2,p2,polarization_cell,basis_size,"
          "raw_cond,actual_solve_cond,actual_solve_rank,sv_min,"
          "relative_raw_residual,discarded_rhs_fraction,"
-         "dz_norm,metric_norm,min_re_B,argmin_re_B,min_re_AplusB,argmin_re_AplusB\n";
+         "dz_norm,metric_norm,min_re_B,argmin_re_B,min_re_AplusB,argmin_re_AplusB";
+    if (include_v_gauss) f << ",V_gauss";
+    f << "\n";
     f << std::setprecision(17);
     for (size_t i = 0; i < tr.t.size(); ++i) {
         f << tr.t[i] << ","
@@ -161,7 +182,9 @@ void write_trace_csv(const std::string& path, const Trace& tr) {
           << tr.min_re_B[i] << ","
           << tr.argmin_re_B[i] << ","
           << tr.min_re_AplusB[i] << ","
-          << tr.argmin_re_AplusB[i] << "\n";
+          << tr.argmin_re_AplusB[i];
+        if (include_v_gauss) f << "," << tr.V_gauss[i];
+        f << "\n";
     }
 }
 

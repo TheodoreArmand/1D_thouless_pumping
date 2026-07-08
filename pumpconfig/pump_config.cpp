@@ -3,6 +3,8 @@
 #include "physical_constants.hpp"
 #include "pumpconfig/legacy_prb_3_3.hpp"
 #include "pumpconfig/lohse_10_5.hpp"
+#include "pumpconfig/lohse_n2_free.hpp"
+#include "pumpconfig/lohse_n2_gauss.hpp"
 
 #include <cmath>
 #include <stdexcept>
@@ -42,14 +44,21 @@ PumpConfig make_pump_config(const std::string& name) {
     if (name == "lohse_10_5") {
         return make_lohse_10_5_config();
     }
+    if (name == "lohse_n2_free") {
+        return make_lohse_n2_free_config();
+    }
+    if (name == "lohse_n2_gauss") {
+        return make_lohse_n2_gauss_config();
+    }
 
     throw std::runtime_error(
         "unknown pump config '" + name
-        + "'. Available configs: legacy_prb_3_3, lohse_10_5");
+        + "'. Available configs: legacy_prb_3_3, lohse_10_5, "
+          "lohse_n2_free, lohse_n2_gauss");
 }
 
 std::vector<std::string> available_pump_configs() {
-    return {"legacy_prb_3_3", "lohse_10_5"};
+    return {"legacy_prb_3_3", "lohse_10_5", "lohse_n2_free", "lohse_n2_gauss"};
 }
 
 }  // namespace pumpconfig

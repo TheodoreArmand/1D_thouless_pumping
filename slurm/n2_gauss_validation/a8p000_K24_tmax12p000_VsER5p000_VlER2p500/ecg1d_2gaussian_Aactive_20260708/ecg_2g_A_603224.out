@@ -1,0 +1,9 @@
+job_id=603224
+job_name=ecg_2g_A
+partition=epyc
+node_list=cent
+submit_dir=/home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping
+workdir=/home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping
+cpus_per_task=8
+mem_per_node=16384
+start_time=2026-07-08T12:02:00+08:00

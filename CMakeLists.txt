@@ -36,6 +36,12 @@ set(PUMPCONFIG_SRC
     pumpconfig/pump_config.cpp
     pumpconfig/legacy_prb_3_3.cpp
     pumpconfig/lohse_10_5.cpp
+    pumpconfig/lohse_n2_free.cpp
+    pumpconfig/lohse_n2_gauss.cpp
+)
+
+set(PUMP2_SRC
+    nointeraction_src/pump_common.cpp
 )
 
 add_executable(ecg1d_thouless_pumping
@@ -58,3 +64,48 @@ endif()
 
 target_compile_definitions(ecg1d_thouless_pumping PRIVATE EIGEN_DONT_PARALLELIZE)
 target_compile_options(ecg1d_thouless_pumping PRIVATE -O2 -march=x86-64-v3)
+
+add_executable(ecg1d_2ninteraction
+    main_2ninteraction.cpp
+    ${PUMP2_SRC}
+    ${PUMPCONFIG_SRC}
+    ${ECG_SRC}
+)
+
+target_include_directories(ecg1d_2ninteraction PRIVATE
+    ${PROJECT_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/src
+)
+
+if(Eigen3_FOUND)
+    target_link_libraries(ecg1d_2ninteraction PRIVATE Eigen3::Eigen OpenMP::OpenMP_CXX)
+else()
+    target_include_directories(ecg1d_2ninteraction PRIVATE ${EIGEN3_INCLUDE_DIR})
+    target_link_libraries(ecg1d_2ninteraction PRIVATE OpenMP::OpenMP_CXX)
+endif()
+
+target_compile_definitions(ecg1d_2ninteraction PRIVATE EIGEN_DONT_PARALLELIZE)
+target_compile_options(ecg1d_2ninteraction PRIVATE -O2 -march=x86-64-v3)
+
+add_executable(ecg1d_2gaussian
+    main_2gaussian.cpp
+    2gaussian_src/gaussian_terms.cpp
+    ${PUMP2_SRC}
+    ${PUMPCONFIG_SRC}
+    ${ECG_SRC}
+)
+
+target_include_directories(ecg1d_2gaussian PRIVATE
+    ${PROJECT_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/src
+)
+
+if(Eigen3_FOUND)
+    target_link_libraries(ecg1d_2gaussian PRIVATE Eigen3::Eigen OpenMP::OpenMP_CXX)
+else()
+    target_include_directories(ecg1d_2gaussian PRIVATE ${EIGEN3_INCLUDE_DIR})
+    target_link_libraries(ecg1d_2gaussian PRIVATE OpenMP::OpenMP_CXX)
+endif()
+
+target_compile_definitions(ecg1d_2gaussian PRIVATE EIGEN_DONT_PARALLELIZE)
+target_compile_options(ecg1d_2gaussian PRIVATE -O2 -march=x86-64-v3)

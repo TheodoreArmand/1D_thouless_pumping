@@ -40,6 +40,12 @@ struct PumpConfig {
     double lambda_C = 1.0e-8;
     double rcond = 1.0e-4;
 
+    // Gaussian pair interaction settings for N >= 2 drivers.
+    // Coupling is specified in the same short-lattice recoil unit as the
+    // lattice depths and converted to code units by the driver.
+    double g_gauss_over_Er = 0.0;
+    double sigma_gauss = 1.0;
+
     // Input/output paths.
     std::string basis_from;
     std::string out_root;
