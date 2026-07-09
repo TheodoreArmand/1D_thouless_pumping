@@ -1,0 +1,29 @@
+job_id=606446
+array_job_id=606446
+array_task_id=1
+job_name=vs3n2rc5
+partition=epyc
+node_list=cent
+excluded_nodes=bar
+workdir=/home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping
+cpus_per_task=32
+mem_per_node=16384
+binary=./build/ecg1d_vs3_n2_dt001_fine20_rcond
+rcond_case=rcond1em5
+rcond=1e-5
+case_label=gauss_sigma1p000
+mode=gauss
+sigma=1.0
+planning_estimate=fine20 local dt, rcond=1e-5, free+sigma1 only, estimated 241279 steps; requested walltime 96 h
+start_time=2026-07-09T23:55:08+08:00
+config=legacy_prb_3_3_n2_pathpad_K32_dt0p01_fine20_rcond1em5_gauss_sigma1p000 lambda_C=1.00e-08 rcond=1.00e-05 | TDVP param dimension=256
+progress N=2 step 0/241277 0.0% t=0.00000 eta_s=nan E=-2.15315024 P=0.99965889 dP=0.00000000 r12=8.04559382 Vg=0.00000079 norm=1.00000000 rank=-1/256 sv_max=nan resid=nan
+initial t=0.00000 tau=0.00000 E=-2.1531502357 <X>/a=0.9996588910 norm=1.0000000000 V_gauss=0.0000007907
+progress N=2 step 250/241277 0.1% t=2.50000 eta_s=124918.8 E=-2.14297848 P=0.98907734 dP=-0.01058155 r12=8.04502521 Vg=0.00000083 norm=1.00000000 rank=46/256 sv_max=1.99e+02 resid=3.12e-03
+progress N=2 step 500/241277 0.2% t=5.00000 eta_s=127438.1 E=-2.11779208 P=0.98047476 dP=-0.01918414 r12=8.04576774 Vg=0.00000094 norm=1.00000000 rank=41/256 sv_max=4.10e+02 resid=6.41e-02
+progress N=2 step 750/241277 0.3% t=7.50000 eta_s=128549.7 E=-2.07651175 P=0.96839886 dP=-0.03126003 r12=8.04823294 Vg=0.00000106 norm=1.00000000 rank=39/256 sv_max=4.36e+02 resid=1.14e-02
+progress N=2 step 1000/241277 0.4% t=10.00000 eta_s=128999.2 E=-2.02661621 P=0.96283249 dP=-0.03682641 r12=8.04396713 Vg=0.00000053 norm=1.00000000 rank=36/256 sv_max=7.13e+02 resid=2.47e-02
+progress N=2 step 1250/241277 0.5% t=12.50000 eta_s=128658.1 E=-1.96897650 P=0.95095194 dP=-0.04870695 r12=8.05064981 Vg=0.00000043 norm=1.00000000 rank=30/256 sv_max=1.82e+03 resid=5.48e-03
+progress N=2 step 1500/241277 0.6% t=15.00000 eta_s=128740.1 E=-1.90966719 P=0.94762053 dP=-0.05203836 r12=8.04357338 Vg=0.00000100 norm=1.00000000 rank=28/256 sv_max=3.31e+03 resid=1.38e-02
+progress N=2 step 1750/241277 0.7% t=17.50000 eta_s=128250.2 E=-1.84894354 P=0.93696022 dP=-0.06269867 r12=8.05310780 Vg=0.00000238 norm=1.00000000 rank=28/256 sv_max=3.91e+03 resid=5.03e-03
+progress N=2 step 2000/241277 0.8% t=20.00000 eta_s=128380.3 E=-1.79060775 P=0.93437971 dP=-0.06527918 r12=8.04127185 Vg=0.00000663 norm=1.00000000 rank=28/256 sv_max=4.09e+03 resid=2.87e-02

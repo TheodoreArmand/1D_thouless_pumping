@@ -14,6 +14,8 @@ REPO = Path(__file__).resolve().parent.parent
 REPORT_SCRIPTS = {
     "base": REPO / "rice_mele_reference" / "make_vs3_n2_k32_sweep_live_report.py",
     "fine20": REPO / "rice_mele_reference" / "make_vs3_n2_k32_sweep_fine20_live_report.py",
+    "fine20_rcond1em5": REPO / "rice_mele_reference" / "make_vs3_n2_k32_sweep_fine20_rcond1em5_live_report.py",
+    "fine20_rcond1em6": REPO / "rice_mele_reference" / "make_vs3_n2_k32_sweep_fine20_rcond1em6_live_report.py",
     "full20": REPO / "rice_mele_reference" / "make_vs3_n2_k32_sweep_full20_live_report.py",
     "full20_repeat": REPO / "rice_mele_reference" / "make_vs3_n2_k32_sweep_full20_repeat_live_report.py",
     "staged": REPO / "rice_mele_reference" / "make_vs3_n2_k32_sweep_staged_live_report.py",

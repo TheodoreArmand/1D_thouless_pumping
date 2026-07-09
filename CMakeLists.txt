@@ -202,6 +202,29 @@ endif()
 target_compile_definitions(ecg1d_vs3_n2_dt001_fine20_full PRIVATE EIGEN_DONT_PARALLELIZE)
 target_compile_options(ecg1d_vs3_n2_dt001_fine20_full PRIVATE -O2 -march=x86-64-v3)
 
+add_executable(ecg1d_vs3_n2_dt001_fine20_rcond
+    txt_task/ecg1d_vs3_n2_dt001_fine20_rcond.cpp
+    2gaussian_src/gaussian_terms.cpp
+    ${PUMP2_SRC}
+    ${PUMPCONFIG_SRC}
+    ${ECG_SRC}
+)
+
+target_include_directories(ecg1d_vs3_n2_dt001_fine20_rcond PRIVATE
+    ${PROJECT_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/src
+)
+
+if(Eigen3_FOUND)
+    target_link_libraries(ecg1d_vs3_n2_dt001_fine20_rcond PRIVATE Eigen3::Eigen OpenMP::OpenMP_CXX)
+else()
+    target_include_directories(ecg1d_vs3_n2_dt001_fine20_rcond PRIVATE ${EIGEN3_INCLUDE_DIR})
+    target_link_libraries(ecg1d_vs3_n2_dt001_fine20_rcond PRIVATE OpenMP::OpenMP_CXX)
+endif()
+
+target_compile_definitions(ecg1d_vs3_n2_dt001_fine20_rcond PRIVATE EIGEN_DONT_PARALLELIZE)
+target_compile_options(ecg1d_vs3_n2_dt001_fine20_rcond PRIVATE -O2 -march=x86-64-v3)
+
 add_executable(ecg1d_vs3_n2_dt001_staged_full
     txt_task/ecg1d_vs3_n2_dt001_staged_full.cpp
     2gaussian_src/gaussian_terms.cpp

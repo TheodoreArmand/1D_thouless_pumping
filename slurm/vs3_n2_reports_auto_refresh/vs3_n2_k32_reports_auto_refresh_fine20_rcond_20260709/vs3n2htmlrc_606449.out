@@ -1,0 +1,27 @@
+job_id=606449
+job_name=vs3n2htmlrc
+partition=wild
+node_list=razor
+submit_dir=/home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping
+workdir=/home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping
+cpus_per_task=1
+mem_per_node=2048
+reports=fine20_rcond1em5,fine20_rcond1em6
+refresh_interval_seconds=600
+start_time=2026-07-09T23:55:00+08:00
+[2026-07-09 23:55:00] cycle=1 start
+[2026-07-09 23:55:00] refresh rice_mele_reference/make_vs3_n2_k32_sweep_fine20_rcond1em5_live_report.py
+2026-07-09 23:55:01 /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/vs3_n2_k32_sweep_fine20_rcond1em5_live_report.html
+[2026-07-09 23:55:01] return_code=0
+[2026-07-09 23:55:01] refresh rice_mele_reference/make_vs3_n2_k32_sweep_fine20_rcond1em6_live_report.py
+2026-07-09 23:55:02 /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/vs3_n2_k32_sweep_fine20_rcond1em6_live_report.html
+[2026-07-09 23:55:02] return_code=0
+[2026-07-09 23:55:02] cycle=1 done last_rc=0
+[2026-07-10 00:05:02] cycle=2 start
+[2026-07-10 00:05:02] refresh rice_mele_reference/make_vs3_n2_k32_sweep_fine20_rcond1em5_live_report.py
+2026-07-10 00:05:03 /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/vs3_n2_k32_sweep_fine20_rcond1em5_live_report.html
+[2026-07-10 00:05:03] return_code=0
+[2026-07-10 00:05:03] refresh rice_mele_reference/make_vs3_n2_k32_sweep_fine20_rcond1em6_live_report.py
+2026-07-10 00:05:04 /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/vs3_n2_k32_sweep_fine20_rcond1em6_live_report.html
+[2026-07-10 00:05:04] return_code=0
+[2026-07-10 00:05:04] cycle=2 done last_rc=0
