@@ -1,0 +1,4 @@
+slurmstepd: error: *** STEP 605678.0 ON cent CANCELLED AT 2026-07-09T22:02:15 ***
+slurmstepd: error: *** JOB 605678 ON cent CANCELLED AT 2026-07-09T22:02:15 ***
+srun: error: cent: task 0: Terminated
+srun: Force Terminated StepId=605678.0

@@ -1,0 +1,35 @@
+job_id=606372
+array_job_id=606360
+array_task_id=0
+job_name=vs3n2fr4
+partition=epyc
+node_list=cent
+excluded_nodes=bar,gyro,doom,fov
+workdir=/home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping
+cpus_per_task=32
+mem_per_node=16384
+binary=./build/ecg1d_vs3_n2_dt0005_full_repeat
+case_label=gauss_sigma2p000
+mode=gauss
+sigma=2.0
+planning_estimate=repeat full-cycle dt/20 fixed dt=0.0005, estimated 1005310 steps; 32-core estimate free ~27.9 h, gauss ~64.2 h; requested walltime 96 h
+start_time=2026-07-09T23:00:18+08:00
+config=legacy_prb_3_3_n2_pathpad_K32_dt0p0005_repeat_gauss_sigma2p000 lambda_C=1.00e-08 rcond=1.00e-04 | TDVP param dimension=256
+progress N=2 step 0/1005310 0.0% t=0.00000 eta_s=nan E=-2.15314890 P=0.99965889 dP=0.00000000 r12=8.04559382 Vg=0.00000212 norm=1.00000000 rank=-1/256 sv_max=nan resid=nan
+initial t=0.00000 tau=0.00000 E=-2.1531489043 <X>/a=0.9996588910 norm=1.0000000000 V_gauss=0.0000021220
+progress N=2 step 250/1005310 0.0% t=0.12500 eta_s=660128.8 E=-2.15312540 P=0.99965667 dP=-0.00000222 r12=8.04559883 Vg=0.00000215 norm=1.00000000 rank=35/256 sv_max=1.10e+02 resid=8.59e-02
+progress N=2 step 500/1005310 0.0% t=0.25000 eta_s=654739.7 E=-2.15303979 P=0.99964204 dP=-0.00001685 r12=8.04560170 Vg=0.00000221 norm=1.00000000 rank=36/256 sv_max=1.13e+02 resid=4.95e-02
+progress N=2 step 750/1005310 0.1% t=0.37500 eta_s=651170.7 E=-2.15289281 P=0.99960298 dP=-0.00005591 r12=8.04558533 Vg=0.00000227 norm=1.00000000 rank=36/256 sv_max=1.13e+02 resid=2.93e-02
+progress N=2 step 1000/1005310 0.1% t=0.50000 eta_s=650983.6 E=-2.15268560 P=0.99952718 dP=-0.00013172 r12=8.04555459 Vg=0.00000229 norm=1.00000000 rank=37/256 sv_max=1.10e+02 resid=2.02e-02
+progress N=2 step 1250/1005310 0.1% t=0.62500 eta_s=651713.0 E=-2.15241968 P=0.99940209 dP=-0.00025680 r12=8.04551988 Vg=0.00000227 norm=1.00000000 rank=36/256 sv_max=1.08e+02 resid=1.59e-02
+progress N=2 step 1500/1005310 0.1% t=0.75000 eta_s=649922.1 E=-2.15209693 P=0.99921588 dP=-0.00044301 r12=8.04548033 Vg=0.00000225 norm=1.00000000 rank=36/256 sv_max=1.09e+02 resid=1.33e-02
+progress N=2 step 1750/1005310 0.2% t=0.87500 eta_s=649534.0 E=-2.15171959 P=0.99895981 dP=-0.00069908 r12=8.04542699 Vg=0.00000223 norm=1.00000000 rank=36/256 sv_max=1.11e+02 resid=1.15e-02
+progress N=2 step 2000/1005310 0.2% t=1.00000 eta_s=648980.4 E=-2.15129012 P=0.99862700 dP=-0.00103190 r12=8.04535862 Vg=0.00000225 norm=1.00000000 rank=36/256 sv_max=1.11e+02 resid=1.01e-02
+progress N=2 step 2250/1005310 0.2% t=1.12500 eta_s=648889.5 E=-2.15081102 P=0.99821266 dP=-0.00144623 r12=8.04528835 Vg=0.00000229 norm=1.00000000 rank=37/256 sv_max=1.10e+02 resid=9.02e-03
+progress N=2 step 2500/1005310 0.2% t=1.25000 eta_s=648908.4 E=-2.15028487 P=0.99771420 dP=-0.00194469 r12=8.04522793 Vg=0.00000232 norm=1.00000000 rank=35/256 sv_max=1.10e+02 resid=8.56e-03
+progress N=2 step 2750/1005310 0.3% t=1.37500 eta_s=648498.6 E=-2.14971422 P=0.99713181 dP=-0.00252709 r12=8.04517792 Vg=0.00000235 norm=1.00000000 rank=35/256 sv_max=1.09e+02 resid=8.26e-03
+progress N=2 step 3000/1005310 0.3% t=1.50000 eta_s=648030.1 E=-2.14910166 P=0.99646781 dP=-0.00319109 r12=8.04513590 Vg=0.00000237 norm=1.00000000 rank=35/256 sv_max=1.07e+02 resid=7.83e-03
+progress N=2 step 3250/1005310 0.3% t=1.62500 eta_s=646666.0 E=-2.14844988 P=0.99572625 dP=-0.00393264 r12=8.04510937 Vg=0.00000238 norm=1.00000000 rank=35/256 sv_max=1.04e+02 resid=7.63e-03
+progress N=2 step 3500/1005310 0.3% t=1.75000 eta_s=645382.3 E=-2.14776137 P=0.99491262 dP=-0.00474627 r12=8.04511098 Vg=0.00000236 norm=1.00000000 rank=37/256 sv_max=1.06e+02 resid=7.50e-03
+progress N=2 step 3750/1005310 0.4% t=1.87500 eta_s=644291.8 E=-2.14703844 P=0.99403553 dP=-0.00562336 r12=8.04514023 Vg=0.00000229 norm=1.00000000 rank=35/256 sv_max=1.10e+02 resid=7.51e-03
+progress N=2 step 4000/1005310 0.4% t=2.00000 eta_s=644190.4 E=-2.14628318 P=0.99310635 dP=-0.00655254 r12=8.04518510 Vg=0.00000219 norm=1.00000000 rank=35/256 sv_max=1.11e+02 resid=7.52e-03

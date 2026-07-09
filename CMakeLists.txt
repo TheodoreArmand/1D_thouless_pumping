@@ -225,6 +225,97 @@ endif()
 target_compile_definitions(ecg1d_vs3_n2_dt001_staged_full PRIVATE EIGEN_DONT_PARALLELIZE)
 target_compile_options(ecg1d_vs3_n2_dt001_staged_full PRIVATE -O2 -march=x86-64-v3)
 
+add_executable(ecg1d_vs3_n2_dt0005_full
+    txt_task/ecg1d_vs3_n2_dt0005_full.cpp
+    2gaussian_src/gaussian_terms.cpp
+    ${PUMP2_SRC}
+    ${PUMPCONFIG_SRC}
+    ${ECG_SRC}
+)
+
+target_include_directories(ecg1d_vs3_n2_dt0005_full PRIVATE
+    ${PROJECT_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/src
+)
+
+if(Eigen3_FOUND)
+    target_link_libraries(ecg1d_vs3_n2_dt0005_full PRIVATE Eigen3::Eigen OpenMP::OpenMP_CXX)
+else()
+    target_include_directories(ecg1d_vs3_n2_dt0005_full PRIVATE ${EIGEN3_INCLUDE_DIR})
+    target_link_libraries(ecg1d_vs3_n2_dt0005_full PRIVATE OpenMP::OpenMP_CXX)
+endif()
+
+target_compile_definitions(ecg1d_vs3_n2_dt0005_full PRIVATE EIGEN_DONT_PARALLELIZE)
+target_compile_options(ecg1d_vs3_n2_dt0005_full PRIVATE -O2 -march=x86-64-v3)
+
+add_executable(ecg1d_vs3_n2_dt0005_full_repeat
+    txt_task/ecg1d_vs3_n2_dt0005_full_repeat.cpp
+    2gaussian_src/gaussian_terms.cpp
+    ${PUMP2_SRC}
+    ${PUMPCONFIG_SRC}
+    ${ECG_SRC}
+)
+
+target_include_directories(ecg1d_vs3_n2_dt0005_full_repeat PRIVATE
+    ${PROJECT_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/src
+)
+
+if(Eigen3_FOUND)
+    target_link_libraries(ecg1d_vs3_n2_dt0005_full_repeat PRIVATE Eigen3::Eigen OpenMP::OpenMP_CXX)
+else()
+    target_include_directories(ecg1d_vs3_n2_dt0005_full_repeat PRIVATE ${EIGEN3_INCLUDE_DIR})
+    target_link_libraries(ecg1d_vs3_n2_dt0005_full_repeat PRIVATE OpenMP::OpenMP_CXX)
+endif()
+
+target_compile_definitions(ecg1d_vs3_n2_dt0005_full_repeat PRIVATE EIGEN_DONT_PARALLELIZE)
+target_compile_options(ecg1d_vs3_n2_dt0005_full_repeat PRIVATE -O2 -march=x86-64-v3)
+
+add_executable(ecg1d_cache_hermitian_validate
+    txt_task/ecg1d_cache_hermitian_validate.cpp
+    ${PUMP2_SRC}
+    ${PUMPCONFIG_SRC}
+    ${ECG_SRC}
+)
+
+target_include_directories(ecg1d_cache_hermitian_validate PRIVATE
+    ${PROJECT_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/src
+)
+
+if(Eigen3_FOUND)
+    target_link_libraries(ecg1d_cache_hermitian_validate PRIVATE Eigen3::Eigen OpenMP::OpenMP_CXX)
+else()
+    target_include_directories(ecg1d_cache_hermitian_validate PRIVATE ${EIGEN3_INCLUDE_DIR})
+    target_link_libraries(ecg1d_cache_hermitian_validate PRIVATE OpenMP::OpenMP_CXX)
+endif()
+
+target_compile_definitions(ecg1d_cache_hermitian_validate PRIVATE EIGEN_DONT_PARALLELIZE)
+target_compile_options(ecg1d_cache_hermitian_validate PRIVATE -O2 -march=x86-64-v3)
+
+add_executable(ecg1d_vs3_n2_k32_fullstep_threads_bench
+    txt_task/ecg1d_vs3_n2_k32_fullstep_threads_bench.cpp
+    2gaussian_src/gaussian_terms.cpp
+    ${PUMP2_SRC}
+    ${PUMPCONFIG_SRC}
+    ${ECG_SRC}
+)
+
+target_include_directories(ecg1d_vs3_n2_k32_fullstep_threads_bench PRIVATE
+    ${PROJECT_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/src
+)
+
+if(Eigen3_FOUND)
+    target_link_libraries(ecg1d_vs3_n2_k32_fullstep_threads_bench PRIVATE Eigen3::Eigen OpenMP::OpenMP_CXX)
+else()
+    target_include_directories(ecg1d_vs3_n2_k32_fullstep_threads_bench PRIVATE ${EIGEN3_INCLUDE_DIR})
+    target_link_libraries(ecg1d_vs3_n2_k32_fullstep_threads_bench PRIVATE OpenMP::OpenMP_CXX)
+endif()
+
+target_compile_definitions(ecg1d_vs3_n2_k32_fullstep_threads_bench PRIVATE EIGEN_DONT_PARALLELIZE)
+target_compile_options(ecg1d_vs3_n2_k32_fullstep_threads_bench PRIVATE -O2 -march=x86-64-v3)
+
 add_executable(ecg1d_gauss_gradient_check
     txt_task/ecg1d_gauss_gradient_check.cpp
     2gaussian_src/gaussian_terms.cpp

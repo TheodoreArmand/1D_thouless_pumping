@@ -11,19 +11,24 @@ from pathlib import Path
 
 
 REPO = Path(__file__).resolve().parent.parent
-REPORTS = [
-    REPO / "rice_mele_reference" / "make_vs3_n2_k32_sweep_live_report.py",
-    REPO / "rice_mele_reference" / "make_vs3_n2_k32_sweep_fine20_live_report.py",
-]
+REPORT_SCRIPTS = {
+    "base": REPO / "rice_mele_reference" / "make_vs3_n2_k32_sweep_live_report.py",
+    "fine20": REPO / "rice_mele_reference" / "make_vs3_n2_k32_sweep_fine20_live_report.py",
+    "full20": REPO / "rice_mele_reference" / "make_vs3_n2_k32_sweep_full20_live_report.py",
+    "full20_repeat": REPO / "rice_mele_reference" / "make_vs3_n2_k32_sweep_full20_repeat_live_report.py",
+    "staged": REPO / "rice_mele_reference" / "make_vs3_n2_k32_sweep_staged_live_report.py",
+}
+DEFAULT_REPORTS = ["base", "fine20"]
 
 
 def stamp() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
-def refresh_once() -> int:
+def refresh_once(report_names: list[str]) -> int:
     worst = 0
-    for script in REPORTS:
+    for name in report_names:
+        script = REPORT_SCRIPTS[name]
         print(f"[{stamp()}] refresh {script.relative_to(REPO)}", flush=True)
         proc = subprocess.run([sys.executable, str(script)], cwd=REPO)
         worst = max(worst, proc.returncode)
@@ -40,6 +45,13 @@ def main() -> int:
         default=0,
         help="Number of refresh cycles; 0 means run until the Slurm time limit.",
     )
+    parser.add_argument(
+        "--reports",
+        nargs="+",
+        choices=sorted(REPORT_SCRIPTS),
+        default=DEFAULT_REPORTS,
+        help="Reports to refresh each cycle.",
+    )
     args = parser.parse_args()
 
     count = 0
@@ -47,7 +59,7 @@ def main() -> int:
     while args.iterations <= 0 or count < args.iterations:
         count += 1
         print(f"[{stamp()}] cycle={count} start", flush=True)
-        last_rc = refresh_once()
+        last_rc = refresh_once(args.reports)
         print(f"[{stamp()}] cycle={count} done last_rc={last_rc}", flush=True)
         if args.iterations > 0 and count >= args.iterations:
             break

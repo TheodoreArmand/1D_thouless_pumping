@@ -1,0 +1,36 @@
+job_id=606367
+job_name=vs3n2htmlr
+partition=wild
+node_list=razor
+submit_dir=/home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping
+workdir=/home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping
+cpus_per_task=1
+mem_per_node=2048
+reports=full20_repeat
+refresh_interval_seconds=600
+start_time=2026-07-09T22:57:20+08:00
+[2026-07-09 22:57:20] cycle=1 start
+[2026-07-09 22:57:20] refresh rice_mele_reference/make_vs3_n2_k32_sweep_full20_repeat_live_report.py
+2026-07-09 22:57:22 /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/vs3_n2_k32_sweep_full20_repeat_live_report.html
+[2026-07-09 22:57:22] return_code=0
+[2026-07-09 22:57:22] cycle=1 done last_rc=0
+[2026-07-09 23:07:22] cycle=2 start
+[2026-07-09 23:07:22] refresh rice_mele_reference/make_vs3_n2_k32_sweep_full20_repeat_live_report.py
+2026-07-09 23:07:25 /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/vs3_n2_k32_sweep_full20_repeat_live_report.html
+[2026-07-09 23:07:25] return_code=0
+[2026-07-09 23:07:25] cycle=2 done last_rc=0
+[2026-07-09 23:17:25] cycle=3 start
+[2026-07-09 23:17:25] refresh rice_mele_reference/make_vs3_n2_k32_sweep_full20_repeat_live_report.py
+2026-07-09 23:17:27 /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/vs3_n2_k32_sweep_full20_repeat_live_report.html
+[2026-07-09 23:17:27] return_code=0
+[2026-07-09 23:17:27] cycle=3 done last_rc=0
+[2026-07-09 23:27:27] cycle=4 start
+[2026-07-09 23:27:27] refresh rice_mele_reference/make_vs3_n2_k32_sweep_full20_repeat_live_report.py
+2026-07-09 23:27:30 /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/vs3_n2_k32_sweep_full20_repeat_live_report.html
+[2026-07-09 23:27:30] return_code=0
+[2026-07-09 23:27:30] cycle=4 done last_rc=0
+[2026-07-09 23:37:30] cycle=5 start
+[2026-07-09 23:37:30] refresh rice_mele_reference/make_vs3_n2_k32_sweep_full20_repeat_live_report.py
+2026-07-09 23:37:32 /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/vs3_n2_k32_sweep_full20_repeat_live_report.html
+[2026-07-09 23:37:32] return_code=0
+[2026-07-09 23:37:32] cycle=5 done last_rc=0
