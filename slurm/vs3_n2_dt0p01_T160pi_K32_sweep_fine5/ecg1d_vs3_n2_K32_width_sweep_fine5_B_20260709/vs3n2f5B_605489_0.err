@@ -1,0 +1,3 @@
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+slurmstepd: error: *** STEP 605493.0 ON doom CANCELLED AT 2026-07-09T15:44:55 ***
+slurmstepd: error: *** JOB 605493 ON doom CANCELLED AT 2026-07-09T15:44:55 ***

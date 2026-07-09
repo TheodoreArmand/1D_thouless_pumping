@@ -60,13 +60,22 @@ void validate_config(const PumpConfig& cfg) {
             !std::isfinite(cfg.manual_fine_dt_factor)) {
             throw std::runtime_error("manual fine dt factor must be finite and in (0, 1]");
         }
-        if (cfg.manual_fine_dt_windows_s.empty()) {
-            throw std::runtime_error("manual fine dt enabled but no windows were configured");
+        if (cfg.manual_fine_dt_windows_s.empty() && cfg.manual_fine_dt_schedule_s.empty()) {
+            throw std::runtime_error("manual fine dt enabled but no windows or schedule were configured");
         }
         for (const auto& w : cfg.manual_fine_dt_windows_s) {
             if (!(w.first >= 0.0 && w.first < w.second && w.second <= 1.0) ||
                 !std::isfinite(w.first) || !std::isfinite(w.second)) {
                 throw std::runtime_error("manual fine dt windows must satisfy 0 <= start < end <= 1");
+            }
+        }
+        for (const auto& w : cfg.manual_fine_dt_schedule_s) {
+            if (!(w.start_s >= 0.0 && w.start_s < w.end_s && w.end_s <= 1.0) ||
+                !std::isfinite(w.start_s) || !std::isfinite(w.end_s)) {
+                throw std::runtime_error("manual fine dt schedule windows must satisfy 0 <= start < end <= 1");
+            }
+            if (!(w.factor > 0.0 && w.factor <= 1.0) || !std::isfinite(w.factor)) {
+                throw std::runtime_error("manual fine dt schedule factors must be finite and in (0, 1]");
             }
         }
     }

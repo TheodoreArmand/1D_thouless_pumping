@@ -21,8 +21,8 @@ pumpconfig::PumpConfig make_vs3_n2_base() {
     cfg.manual_fine_dt_windows_s = {{0.2, 0.3}, {0.7, 0.8}};
     cfg.pump_period = 160.0 * pumpconfig::pi;
     cfg.total_time = 160.0 * pumpconfig::pi;
-    cfg.trace_every = 25;
-    cfg.snapshot_every = 25;
+    cfg.trace_every = 250;
+    cfg.snapshot_every = 250;
     cfg.basis_from = "initial_state/Vs3Er_Vl3Er/initial_pathpad_N2_K32.csv";
     cfg.sigma_gauss = 1.0;
     return cfg;

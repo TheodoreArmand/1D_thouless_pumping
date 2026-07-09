@@ -13,7 +13,6 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 REPORTS = [
     REPO / "rice_mele_reference" / "make_vs3_n2_k32_sweep_live_report.py",
-    REPO / "rice_mele_reference" / "make_vs3_n2_k32_sweep_fine5_live_report.py",
     REPO / "rice_mele_reference" / "make_vs3_n2_k32_sweep_fine20_live_report.py",
 ]
 

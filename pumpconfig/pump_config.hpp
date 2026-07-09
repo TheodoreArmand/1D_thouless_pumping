@@ -8,6 +8,12 @@ namespace pumpconfig {
 
 constexpr double pi = 3.141592653589793238462643383279502884;
 
+struct ManualFineDtWindow {
+    double start_s = 0.0;
+    double end_s = 0.0;
+    double factor = 1.0;
+};
+
 struct PumpConfig {
     std::string config_name;
     std::string model;
@@ -30,6 +36,7 @@ struct PumpConfig {
     bool manual_fine_dt_enabled = false;
     double manual_fine_dt_factor = 1.0;
     std::vector<std::pair<double, double>> manual_fine_dt_windows_s;
+    std::vector<ManualFineDtWindow> manual_fine_dt_schedule_s;
 
     // Phase schedule CSV with columns s=t/T and phi(s).
     std::string phase_schedule_csv;

@@ -24,12 +24,38 @@ double long_cosine_coeff(const pumpconfig::PumpConfig& cfg) {
     return -cfg.Vl;
 }
 
-bool in_manual_fine_window(const pumpconfig::PumpConfig& cfg, double s) {
-    if (!cfg.manual_fine_dt_enabled) return false;
+double manual_fine_dt_factor_at_s(const pumpconfig::PumpConfig& cfg, double s) {
+    if (!cfg.manual_fine_dt_enabled) return 1.0;
+    double factor = 1.0;
     for (const auto& w : cfg.manual_fine_dt_windows_s) {
-        if (s >= w.first && s < w.second) return true;
+        if (s >= w.first && s < w.second) {
+            factor = std::min(factor, cfg.manual_fine_dt_factor);
+        }
     }
-    return false;
+    for (const auto& w : cfg.manual_fine_dt_schedule_s) {
+        if (s >= w.start_s && s < w.end_s) {
+            factor = std::min(factor, w.factor);
+        }
+    }
+    return factor;
+}
+
+double manual_fine_dt_min_factor(const pumpconfig::PumpConfig& cfg) {
+    if (!cfg.manual_fine_dt_enabled) return 1.0;
+    double factor = 1.0;
+    if (!cfg.manual_fine_dt_windows_s.empty()) {
+        factor = std::min(factor, cfg.manual_fine_dt_factor);
+    }
+    for (const auto& w : cfg.manual_fine_dt_schedule_s) {
+        factor = std::min(factor, w.factor);
+    }
+    return factor;
+}
+
+std::string time_step_mode_string(const pumpconfig::PumpConfig& cfg) {
+    if (!cfg.manual_fine_dt_enabled) return "fixed";
+    if (!cfg.manual_fine_dt_schedule_s.empty()) return "manual_fine_schedule";
+    return "manual_fine_window";
 }
 
 std::string manual_fine_windows_string(const pumpconfig::PumpConfig& cfg) {
@@ -39,6 +65,17 @@ std::string manual_fine_windows_string(const pumpconfig::PumpConfig& cfg) {
         if (i) oss << ";";
         oss << cfg.manual_fine_dt_windows_s[i].first
             << "-" << cfg.manual_fine_dt_windows_s[i].second;
+    }
+    return oss.str();
+}
+
+std::string manual_fine_schedule_string(const pumpconfig::PumpConfig& cfg) {
+    std::ostringstream oss;
+    oss << std::setprecision(17);
+    for (size_t i = 0; i < cfg.manual_fine_dt_schedule_s.size(); ++i) {
+        if (i) oss << ";";
+        const auto& w = cfg.manual_fine_dt_schedule_s[i];
+        oss << w.start_s << "-" << w.end_s << "@" << w.factor;
     }
     return oss.str();
 }
@@ -77,20 +114,25 @@ long long estimate_time_steps(const pumpconfig::PumpConfig& cfg) {
 double time_step_at(const pumpconfig::PumpConfig& cfg, double t) {
     if (!cfg.manual_fine_dt_enabled) return cfg.dt;
     const double s = (cfg.pump_period > 0.0) ? (t / cfg.pump_period) : 0.0;
-    return in_manual_fine_window(cfg, s) ? cfg.dt * cfg.manual_fine_dt_factor : cfg.dt;
+    return cfg.dt * manual_fine_dt_factor_at_s(cfg, s);
 }
 
 double next_time_step(const pumpconfig::PumpConfig& cfg, double t) {
     double dt_step = time_step_at(cfg, t);
     if (cfg.manual_fine_dt_enabled) {
-        for (const auto& w : cfg.manual_fine_dt_windows_s) {
-            const double start_t = w.first * cfg.pump_period;
-            const double end_t = w.second * cfg.pump_period;
-            if (t < start_t && t + dt_step > start_t) {
-                dt_step = start_t - t;
-            } else if (t < end_t && t + dt_step > end_t) {
-                dt_step = end_t - t;
+        auto clamp_to_boundary = [&](double boundary_s) {
+            const double boundary_t = boundary_s * cfg.pump_period;
+            if (t < boundary_t && t + dt_step > boundary_t) {
+                dt_step = boundary_t - t;
             }
+        };
+        for (const auto& w : cfg.manual_fine_dt_windows_s) {
+            clamp_to_boundary(w.first);
+            clamp_to_boundary(w.second);
+        }
+        for (const auto& w : cfg.manual_fine_dt_schedule_s) {
+            clamp_to_boundary(w.start_s);
+            clamp_to_boundary(w.end_s);
         }
     }
     return std::min(dt_step, cfg.total_time - t);
@@ -114,11 +156,12 @@ void write_config_txt(const std::string& path, const pumpconfig::PumpConfig& cfg
       << "pump_period=" << cfg.pump_period << "\n"
       << "total_time=" << cfg.total_time << "\n"
       << "dt=" << cfg.dt << "\n"
-      << "time_step_mode=" << (cfg.manual_fine_dt_enabled ? "manual_fine_window" : "fixed") << "\n"
+      << "time_step_mode=" << time_step_mode_string(cfg) << "\n"
       << "manual_fine_dt_enabled=" << (cfg.manual_fine_dt_enabled ? 1 : 0) << "\n"
       << "manual_fine_dt_factor=" << cfg.manual_fine_dt_factor << "\n"
       << "manual_fine_dt_windows_s=" << manual_fine_windows_string(cfg) << "\n"
-      << "manual_fine_dt_min_dt=" << cfg.dt * cfg.manual_fine_dt_factor << "\n"
+      << "manual_fine_dt_schedule_s=" << manual_fine_schedule_string(cfg) << "\n"
+      << "manual_fine_dt_min_dt=" << cfg.dt * manual_fine_dt_min_factor(cfg) << "\n"
       << "phase_schedule_csv=" << cfg.phase_schedule_csv << "\n"
       << "phase_schedule_points=" << cfg.phase_s.size() << "\n"
       << "estimated_time_steps=" << estimate_time_steps(cfg) << "\n"
@@ -183,12 +226,13 @@ void write_run_summary_txt(const std::string& path,
       << "lambda_C=" << cfg.lambda_C << "\n"
       << "rcond=" << cfg.rcond << "\n"
       << "param_dim=" << stats.param_dim << "\n"
-      << "time_step_mode=" << (cfg.manual_fine_dt_enabled ? "manual_fine_window" : "fixed") << "\n"
+      << "time_step_mode=" << time_step_mode_string(cfg) << "\n"
       << "dt=" << cfg.dt << "\n"
       << "manual_fine_dt_enabled=" << (cfg.manual_fine_dt_enabled ? 1 : 0) << "\n"
       << "manual_fine_dt_factor=" << cfg.manual_fine_dt_factor << "\n"
       << "manual_fine_dt_windows_s=" << manual_fine_windows_string(cfg) << "\n"
-      << "manual_fine_dt_min_dt=" << cfg.dt * cfg.manual_fine_dt_factor << "\n"
+      << "manual_fine_dt_schedule_s=" << manual_fine_schedule_string(cfg) << "\n"
+      << "manual_fine_dt_min_dt=" << cfg.dt * manual_fine_dt_min_factor(cfg) << "\n"
       << "phase_schedule_csv=" << cfg.phase_schedule_csv << "\n"
       << "phase_schedule_points=" << cfg.phase_s.size() << "\n"
       << "estimated_time_steps=" << estimate_time_steps(cfg) << "\n"

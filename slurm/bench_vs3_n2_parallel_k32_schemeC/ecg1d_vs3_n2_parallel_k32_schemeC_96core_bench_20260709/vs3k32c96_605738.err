@@ -1,0 +1,4 @@
+bench_threads=16 wall_elapsed_seconds=16.16
+bench_threads=32 wall_elapsed_seconds=18.23
+bench_threads=64 wall_elapsed_seconds=22.16
+bench_threads=96 wall_elapsed_seconds=22.88
