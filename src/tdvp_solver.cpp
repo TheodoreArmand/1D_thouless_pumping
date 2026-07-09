@@ -24,16 +24,18 @@ MatrixXcd assemble_C(const std::vector<AlphaIndex>& alpha_z_list,
 
     MatrixXcd C_mat = MatrixXcd::Zero(d, d);
 
-    #pragma omp parallel for collapse(2) schedule(static)
+    #pragma omp parallel for schedule(dynamic, 1)
     for (int a = 0; a < d; a++) {
-        for (int b = 0; b < d; b++) {
+        for (int b = a; b < d; b++) {
             const auto& alpha = alpha_z_list[a];
             const auto& beta = alpha_z_list[b];
             const Cd second = partial_z_second(
                 alpha.a1, beta.a1, basis,
                 alpha.a2, alpha.a3, alpha.a4,
                 beta.a2, beta.a3, beta.a4);
-            C_mat(a, b) = -first_real(a) * first_false(b) / (S * S) + second / S;
+            const Cd value = -first_real(a) * first_false(b) / (S * S) + second / S;
+            C_mat(a, b) = value;
+            if (b != a) C_mat(b, a) = std::conj(value);
         }
     }
     return C_mat;

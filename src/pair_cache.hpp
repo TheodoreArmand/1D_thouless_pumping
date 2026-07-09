@@ -1,6 +1,9 @@
 #pragma once
 #include "types.hpp"
 #include "basis_params.hpp"
+#include "permutation.hpp"
+#include <cstddef>
+#include <vector>
 
 namespace ecg1d {
 
@@ -18,6 +21,37 @@ struct PairCache {
 
     static PairCache build(const BasisParams& pi, const BasisParams& pj,
                            const MatrixXi& perm_matrix);
+};
+
+class PairCacheTable {
+public:
+    explicit PairCacheTable(const std::vector<BasisParams>& basis);
+
+    const PairCache& get(int i, int j, int p) const;
+    int basis_size() const { return K_; }
+    int particle_count() const { return perms_.N; }
+    int permutation_count() const { return perms_.SN; }
+    int permutation_index(const MatrixXi& perm_matrix) const;
+
+private:
+    std::size_t offset(int i, int j, int p) const;
+
+    const std::vector<BasisParams>* basis_;
+    PermutationSet perms_;
+    int K_;
+    std::vector<PairCache> entries_;
+};
+
+class PairCacheTableScope {
+public:
+    explicit PairCacheTableScope(const PairCacheTable& table);
+    ~PairCacheTableScope();
+
+    PairCacheTableScope(const PairCacheTableScope&) = delete;
+    PairCacheTableScope& operator=(const PairCacheTableScope&) = delete;
+
+private:
+    const PairCacheTable* previous_;
 };
 
 } // namespace ecg1d

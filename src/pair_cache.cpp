@@ -1,10 +1,14 @@
 #include "pair_cache.hpp"
 #include <cmath>
+#include <stdexcept>
 
 namespace ecg1d {
+namespace {
 
-PairCache PairCache::build(const BasisParams& pi, const BasisParams& pj,
-                           const MatrixXi& perm_matrix) {
+const PairCacheTable* g_active_pair_cache_table = nullptr;
+
+PairCache build_pair_cache_uncached(const BasisParams& pi, const BasisParams& pj,
+                                    const MatrixXi& perm_matrix) {
     PairCache c;
     c.N = pi.N();
     int N = c.N;
@@ -55,6 +59,80 @@ PairCache PairCache::build(const BasisParams& pi, const BasisParams& pj,
     c.M_G = PI * sqrt_detK_inv * std::exp(exponent);
 
     return c;
+}
+
+}  // namespace
+
+PairCache PairCache::build(const BasisParams& pi, const BasisParams& pj,
+                           const MatrixXi& perm_matrix) {
+    const PairCacheTable* table = g_active_pair_cache_table;
+    if (table != nullptr &&
+        pi.N() == table->particle_count() &&
+        pj.N() == table->particle_count() &&
+        pi.name >= 0 && pj.name >= 0 &&
+        pi.name < table->basis_size() &&
+        pj.name < table->basis_size()) {
+        const int p = table->permutation_index(perm_matrix);
+        if (p >= 0) return table->get(pi.name, pj.name, p);
+    }
+
+    return build_pair_cache_uncached(pi, pj, perm_matrix);
+}
+
+PairCacheTable::PairCacheTable(const std::vector<BasisParams>& basis)
+    : basis_(&basis),
+      perms_(PermutationSet::generate(basis.empty() ? 0 : basis[0].N())),
+      K_(static_cast<int>(basis.size())) {
+    if (basis.empty()) {
+        throw std::runtime_error("PairCacheTable requires a non-empty basis");
+    }
+
+    const std::size_t total =
+        static_cast<std::size_t>(K_) * static_cast<std::size_t>(K_) *
+        static_cast<std::size_t>(perms_.SN);
+    entries_.resize(total);
+
+    #pragma omp parallel for schedule(static)
+    for (long long idx = 0; idx < static_cast<long long>(total); ++idx) {
+        const int p = static_cast<int>(idx % perms_.SN);
+        const int pair_idx = static_cast<int>(idx / perms_.SN);
+        const int j = pair_idx % K_;
+        const int i = pair_idx / K_;
+        entries_[static_cast<std::size_t>(idx)] =
+            build_pair_cache_uncached((*basis_)[i], (*basis_)[j], perms_.matrices[p]);
+    }
+}
+
+const PairCache& PairCacheTable::get(int i, int j, int p) const {
+    return entries_[offset(i, j, p)];
+}
+
+int PairCacheTable::permutation_index(const MatrixXi& perm_matrix) const {
+    for (int p = 0; p < perms_.SN; ++p) {
+        const MatrixXi& m = perms_.matrices[p];
+        if (m.rows() == perm_matrix.rows() &&
+            m.cols() == perm_matrix.cols() &&
+            (m.array() == perm_matrix.array()).all()) {
+            return p;
+        }
+    }
+    return -1;
+}
+
+std::size_t PairCacheTable::offset(int i, int j, int p) const {
+    return (static_cast<std::size_t>(i) * static_cast<std::size_t>(K_) +
+            static_cast<std::size_t>(j)) *
+           static_cast<std::size_t>(perms_.SN) +
+           static_cast<std::size_t>(p);
+}
+
+PairCacheTableScope::PairCacheTableScope(const PairCacheTable& table)
+    : previous_(g_active_pair_cache_table) {
+    g_active_pair_cache_table = &table;
+}
+
+PairCacheTableScope::~PairCacheTableScope() {
+    g_active_pair_cache_table = previous_;
 }
 
 } // namespace ecg1d

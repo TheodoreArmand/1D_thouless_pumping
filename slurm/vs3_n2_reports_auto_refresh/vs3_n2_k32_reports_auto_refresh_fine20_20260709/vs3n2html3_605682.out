@@ -1,0 +1,44 @@
+job_id=605682
+job_name=vs3n2html3
+partition=epyc
+node_list=gyro
+submit_dir=/home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping
+workdir=/home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping
+cpus_per_task=1
+mem_per_node=2048
+reports=dt10,fine5,fine20
+refresh_interval_seconds=600
+start_time=2026-07-09T14:57:39+08:00
+[2026-07-09 14:57:40] cycle=1 start
+[2026-07-09 14:57:40] refresh rice_mele_reference/make_vs3_n2_k32_sweep_live_report.py
+2026-07-09 14:57:49 /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/vs3_n2_k32_sweep_live_report.html
+[2026-07-09 14:57:49] return_code=0
+[2026-07-09 14:57:49] refresh rice_mele_reference/make_vs3_n2_k32_sweep_fine5_live_report.py
+2026-07-09 14:57:58 /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/vs3_n2_k32_sweep_fine5_live_report.html
+[2026-07-09 14:57:58] return_code=0
+[2026-07-09 14:57:58] refresh rice_mele_reference/make_vs3_n2_k32_sweep_fine20_live_report.py
+2026-07-09 14:58:03 /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/vs3_n2_k32_sweep_fine20_live_report.html
+[2026-07-09 14:58:03] return_code=0
+[2026-07-09 14:58:03] cycle=1 done last_rc=0
+[2026-07-09 15:08:03] cycle=2 start
+[2026-07-09 15:08:03] refresh rice_mele_reference/make_vs3_n2_k32_sweep_live_report.py
+2026-07-09 15:08:12 /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/vs3_n2_k32_sweep_live_report.html
+[2026-07-09 15:08:13] return_code=0
+[2026-07-09 15:08:13] refresh rice_mele_reference/make_vs3_n2_k32_sweep_fine5_live_report.py
+2026-07-09 15:08:22 /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/vs3_n2_k32_sweep_fine5_live_report.html
+[2026-07-09 15:08:22] return_code=0
+[2026-07-09 15:08:22] refresh rice_mele_reference/make_vs3_n2_k32_sweep_fine20_live_report.py
+2026-07-09 15:08:27 /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/vs3_n2_k32_sweep_fine20_live_report.html
+[2026-07-09 15:08:27] return_code=0
+[2026-07-09 15:08:27] cycle=2 done last_rc=0
+[2026-07-09 15:18:27] cycle=3 start
+[2026-07-09 15:18:27] refresh rice_mele_reference/make_vs3_n2_k32_sweep_live_report.py
+2026-07-09 15:18:37 /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/vs3_n2_k32_sweep_live_report.html
+[2026-07-09 15:18:37] return_code=0
+[2026-07-09 15:18:37] refresh rice_mele_reference/make_vs3_n2_k32_sweep_fine5_live_report.py
+2026-07-09 15:18:47 /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/vs3_n2_k32_sweep_fine5_live_report.html
+[2026-07-09 15:18:47] return_code=0
+[2026-07-09 15:18:47] refresh rice_mele_reference/make_vs3_n2_k32_sweep_fine20_live_report.py
+2026-07-09 15:18:53 /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/vs3_n2_k32_sweep_fine20_live_report.html
+[2026-07-09 15:18:53] return_code=0
+[2026-07-09 15:18:53] cycle=3 done last_rc=0

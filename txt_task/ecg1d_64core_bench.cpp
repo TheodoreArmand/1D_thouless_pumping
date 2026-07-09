@@ -57,8 +57,9 @@ int run_n1_case(PumpConfig cfg, const std::string& out_root, int steps) {
 
     const double dnan = std::numeric_limits<double>::quiet_NaN();
     double max_cond_C = 0.0;
-    double max_raw_cond = 0.0;
     double max_actual_solve_cond = 0.0;
+    double max_solve_sv_max = 0.0;
+    double last_sv_max = dnan;
     int min_actual_solve_rank = std::numeric_limits<int>::max();
     double max_relative_raw_residual = 0.0;
     double max_discarded_rhs_fraction = 0.0;
@@ -96,9 +97,12 @@ int run_n1_case(PumpConfig cfg, const std::string& out_root, int steps) {
         min_accepted_dt = std::min(min_accepted_dt, r.used_dt);
         max_accepted_dt = std::max(max_accepted_dt, r.used_dt);
         max_cond_C = std::max(max_cond_C, r.cond_C);
-        if (std::isfinite(r.raw_cond)) max_raw_cond = std::max(max_raw_cond, r.raw_cond);
         if (std::isfinite(r.actual_solve_cond)) {
             max_actual_solve_cond = std::max(max_actual_solve_cond, r.actual_solve_cond);
+        }
+        if (std::isfinite(r.sv_max)) {
+            max_solve_sv_max = std::max(max_solve_sv_max, r.sv_max);
+            last_sv_max = r.sv_max;
         }
         min_actual_solve_rank = std::min(min_actual_solve_rank, r.effective_rank);
         if (std::isfinite(r.relative_raw_residual)) {
@@ -153,9 +157,10 @@ int run_n1_case(PumpConfig cfg, const std::string& out_root, int steps) {
     summary_stats.max_accepted_dt = max_accepted_dt;
     summary_stats.evolution_wall_seconds = evolution_wall_seconds;
     summary_stats.evolution_seconds_per_step = evolution_seconds_per_step;
-    summary_stats.max_raw_cond = max_raw_cond;
     summary_stats.max_actual_solve_cond = max_actual_solve_cond;
     summary_stats.max_cond_C = max_cond_C;
+    summary_stats.max_solve_sv_max = max_solve_sv_max;
+    summary_stats.final_sv_max = last_sv_max;
     summary_stats.min_actual_solve_rank = min_actual_solve_rank;
     summary_stats.final_sv_small[0] = last_sv_small[0];
     summary_stats.final_sv_small[1] = last_sv_small[1];

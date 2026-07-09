@@ -34,10 +34,12 @@ struct RealtimeStepResult {
     double dz_norm = 0.0;
 
     // Extended k1-stage linear-algebra diagnostics (see compute_rhs_dz).
-    // raw_cond:        cond of the raw metric C (no lambda_C).
+    // raw_cond:        deprecated; kept as NaN for legacy CSV compatibility.
     // actual_solve_cond: cond of the matrix actually fed to the SVD solve
     //                  (= C + lambda_C I). Equal to cond_C; kept under an
     //                  explicit name for clarity.
+    // sv_max:          largest eigenvalue/singular value of that Hermitian solve
+    //                  matrix. The active relative cutoff is rcond * sv_max.
     // relative_raw_residual: ||C_raw dz - rhs|| / ||rhs|| for the k1 solution,
     //                  i.e. how well dz solves the original TDVP equation.
     // discarded_rhs_fraction: fraction of the rhs (in the solve/U basis) removed
@@ -45,6 +47,7 @@ struct RealtimeStepResult {
     // metric_norm:     sqrt(real(dz^dagger C_raw dz)) for the k1 dz.
     double raw_cond                  = std::numeric_limits<double>::quiet_NaN();
     double actual_solve_cond         = std::numeric_limits<double>::quiet_NaN();
+    double sv_max                    = std::numeric_limits<double>::quiet_NaN();
     double relative_raw_residual     = std::numeric_limits<double>::quiet_NaN();
     double discarded_rhs_fraction    = std::numeric_limits<double>::quiet_NaN();
     double metric_norm               = std::numeric_limits<double>::quiet_NaN();

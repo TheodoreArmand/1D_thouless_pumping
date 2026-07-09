@@ -82,6 +82,7 @@ def read_ecg(path: Path) -> list[dict]:
             rows.append({
                 "step": int(float(row["step"])),
                 "t": float(row["t"]),
+                "phi": float(row["phi"]),
                 "P": float(row["polarization_cell"]),
                 "dP": float(row["delta_polarization"]),
                 "r12": float(row["r12_rms"]),
@@ -121,6 +122,7 @@ def read_grid_csv(path: Path) -> list[dict]:
                 "total": TOTAL_STEPS,
                 "pct": 100.0 * t / TOTAL_TIME,
                 "t": t,
+                "phi": float(row["phi"]),
                 "eta": float("nan"),
                 "P": float(row["polarization_cell"]),
                 "dP": float(row["delta_polarization"]),
@@ -149,6 +151,7 @@ def common_by_step(ecg_rows: list[dict], grid_rows: list[dict]) -> list[dict]:
         common.append({
             "step": step,
             "t": e["t"],
+            "phi": e.get("phi", g.get("phi", float("nan"))),
             "x": e["t"] / TOTAL_TIME,
             "ecg_P": e["P"],
             "grid_P": g["P"],
@@ -208,6 +211,24 @@ def plot_delta(case_name: str, cfg: dict, ecg_rows: list[dict], grid_rows: list[
     ax.set_xlabel(r"$t/T$", fontsize=8.3)
     ax.set_ylabel(r"$\Delta P$", fontsize=8.3)
     ax.set_title(f"{case_name}: displacement", fontsize=9.2)
+    style_axis(ax)
+    ax.legend(frameon=False, loc="best", fontsize=7.4, handlelength=2.2)
+    fig.tight_layout()
+    return fig_to_data_uri(fig)
+
+
+def plot_delta_phase(case_name: str, cfg: dict, common: list[dict]) -> str:
+    fig, ax = plt.subplots(figsize=(3.75, 2.45))
+    phase = [r["phi"] / math.pi for r in common if math.isfinite(r["phi"])]
+    ecg_dp = [r["ecg_dP"] for r in common if math.isfinite(r["phi"])]
+    grid_dp = [r["grid_dP"] for r in common if math.isfinite(r["phi"])]
+    ax.plot(phase, grid_dp, color="#475569", lw=1.45, ls="--", label="grid")
+    ax.plot(phase, ecg_dp, color=cfg["color_ecg"], lw=1.55, label="ECG")
+    ax.axhline(IDEAL_DELTA_P, color="#94a3b8", lw=0.9, ls=":")
+    ax.set_xlim(0.0, 2.0)
+    ax.set_xlabel(r"$\phi/\pi$", fontsize=8.3)
+    ax.set_ylabel(r"$\Delta P$", fontsize=8.3)
+    ax.set_title(f"{case_name}: phase axis", fontsize=9.2)
     style_axis(ax)
     ax.legend(frameon=False, loc="best", fontsize=7.4, handlelength=2.2)
     fig.tight_layout()
@@ -289,6 +310,7 @@ def build_case(case_name: str, cfg: dict) -> dict:
         "unhealthy": unhealthy,
         "severe": severe,
         "delta_plot": plot_delta(case_name, cfg, ecg_rows, grid_rows),
+        "delta_phase_plot": plot_delta_phase(case_name, cfg, common) if common else "",
         "diff_plot": plot_difference(cfg, common) if common else "",
         "health_plot": plot_health(case_name, cfg, ecg_rows),
     }
@@ -434,6 +456,10 @@ def case_section(item: dict) -> str:
           <figure>
             <img src="{item['health_plot']}" alt="{cfg['title']} ECG health metrics">
             <figcaption><b>ECG health.</b> Width floor and raw residual; the dashed line is the successful-case width floor.</figcaption>
+          </figure>
+          <figure>
+            <img src="{item['delta_phase_plot']}" alt="{cfg['title']} displacement phase-axis comparison">
+            <figcaption><b>Phase axis.</b> Same common-step displacement comparison plotted against \\(\\phi/\\pi\\).</figcaption>
           </figure>
         </div>
         <p class="source">ECG source: <code>{rel(cfg['ecg'])}</code><br>
@@ -644,7 +670,7 @@ def main() -> None:
 
   <section class="section">
     <h2>Definitions</h2>
-    <p>This report compares the two running ECG-TDVP jobs with the currently available split-step grid-reference log data. The grid jobs have not necessarily written their final <code>.npz</code>/<code>.csv</code> files yet, so grid curves here are parsed from the Slurm progress lines.</p>
+    <p>This report compares the two running ECG-TDVP jobs with the currently available split-step grid-reference data. Grid curves are read from the finished grid <code>.csv</code> files when present, otherwise from Slurm progress lines.</p>
     <div class="equation">
       \\[
       P(t)=\\frac{{\\langle x_0+x_1\\rangle}}{{a}},
@@ -654,7 +680,7 @@ def main() -> None:
       \\Delta P_{{\\mathrm{{ideal}}}}\\simeq -2 .
       \\]
     </div>
-    <div class="banner">The comparison at common steps uses exact shared step numbers. ECG samples every 25 steps; the grid log prints every 250 steps, so common rows are the grid log steps already present in the ECG progress file.</div>
+    <div class="banner">The comparison at common steps uses exact shared step numbers. When grid CSV files are available, this uses the same 25-step cadence as the ECG progress files; Slurm logs are used only as a fallback.</div>
   </section>
 
   <section class="section">

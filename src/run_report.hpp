@@ -16,9 +16,10 @@ struct RunSummaryStats {
     double max_accepted_dt = 0.0;
     double evolution_wall_seconds = 0.0;
     double evolution_seconds_per_step = 0.0;
-    double max_raw_cond = 0.0;
     double max_actual_solve_cond = 0.0;
     double max_cond_C = 0.0;
+    double max_solve_sv_max = 0.0;
+    double final_sv_max = 0.0;
     int min_actual_solve_rank = -1;
     double final_sv_small[3] = {0.0, 0.0, 0.0};
     double max_relative_raw_residual = 0.0;
@@ -30,6 +31,10 @@ struct RunSummaryStats {
 std::string format_output_tag(double x);
 
 long long estimate_time_steps(const pumpconfig::PumpConfig& cfg);
+
+double time_step_at(const pumpconfig::PumpConfig& cfg, double t);
+
+double next_time_step(const pumpconfig::PumpConfig& cfg, double t);
 
 void write_config_txt(const std::string& path, const pumpconfig::PumpConfig& cfg);
 

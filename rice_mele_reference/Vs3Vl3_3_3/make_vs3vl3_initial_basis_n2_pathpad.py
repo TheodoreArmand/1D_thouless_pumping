@@ -13,17 +13,18 @@ product state:
   psi(x0, x1) ~ phi_left(x0) phi_right(x1) + phi_right(x0) phi_left(x1),
 
 where phi_right is the same N=1 packet shifted by one long-lattice period
-a = 8. The output keeps K=24:
+a = 8. The output keeps K=32:
 
   - 16 core product Gaussians selected from the dominant N=1 fit terms;
-  - 8 broad path-pad reserve products, four for the left packet and four for
-    the right packet.
+  - 16 path-pad reserve products, eight for the left packet and eight for the
+    right packet. Each packet gets the same four downstream centers as the N=1
+    path-pad state, with both broad and narrow widths.
 
 The coefficients are least-squares fitted to the full K16 x K16 symmetrized
 product on a periodic grid, then normalized in that same grid convention.
 
 Output:
-  initial_state/Vs3Er_Vl3Er/initial_pathpad_N2_K24.csv
+  initial_state/Vs3Er_Vl3Er/initial_pathpad_N2_K32.csv
 """
 from __future__ import annotations
 
@@ -35,12 +36,12 @@ HERE = Path(__file__).resolve().parent
 REPO = HERE.parent.parent
 OUTDIR = REPO / "initial_state" / "Vs3Er_Vl3Er"
 N1CSV = OUTDIR / "initial_pathpad_N1_K16.csv"
-OUTCSV = OUTDIR / "initial_pathpad_N2_K24.csv"
+OUTCSV = OUTDIR / "initial_pathpad_N2_K32.csv"
 
 A_LAT = 8.0
 LENGTH = 16 * A_LAT
 M_GRID = 2048
-K_OUT = 24
+K_OUT = 32
 
 
 def load_n1_basis(path: Path):
@@ -103,11 +104,13 @@ def main() -> None:
     core_products.sort(reverse=True, key=lambda row: row[0])
     selected = [(i, j) for _score, i, j in core_products[:16]]
 
-    # Broad pads at R = -2, -4, -6, -8. Include them once for each packet.
-    broad_pads = [8, 10, 12, 14]
+    # N=1 path pads at R = -2, -4, -6, -8, with broad+narrow widths.
+    # Include the same downstream pads once for each packet. The right packet
+    # is shifted by +a, so these become x = 6, 4, 2, 0 rather than +x pads.
+    path_pads = list(range(8, 16))
     anchor = 0
-    selected += [(p, anchor) for p in broad_pads]
-    selected += [(anchor, p) for p in broad_pads]
+    selected += [(p, anchor) for p in path_pads]
+    selected += [(anchor, p) for p in path_pads]
     if len(selected) != K_OUT:
         raise RuntimeError(f"internal selection error: {len(selected)} terms")
 
@@ -151,7 +154,7 @@ def main() -> None:
     overlap = float(np.sum(psi_fit * psi_target) * dx * dx)
     fidelity = overlap * overlap
 
-    print("[1] selected K=24 products:")
+    print(f"[1] selected K={K_OUT} products:")
     for k, (i, j) in enumerate(selected):
         tag = "core" if k < 16 else "path-pad"
         print(f"    {k:2d} {tag:8s}: left={i:2d} right={j:2d} coeff={coeffs[k]:+.8e}")

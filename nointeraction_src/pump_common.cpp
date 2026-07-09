@@ -55,6 +55,21 @@ void validate_config(const PumpConfig& cfg) {
     if (!(cfg.dt > 0.0) || !std::isfinite(cfg.dt)) {
         throw std::runtime_error("fixed dt must be positive and finite");
     }
+    if (cfg.manual_fine_dt_enabled) {
+        if (!(cfg.manual_fine_dt_factor > 0.0 && cfg.manual_fine_dt_factor <= 1.0) ||
+            !std::isfinite(cfg.manual_fine_dt_factor)) {
+            throw std::runtime_error("manual fine dt factor must be finite and in (0, 1]");
+        }
+        if (cfg.manual_fine_dt_windows_s.empty()) {
+            throw std::runtime_error("manual fine dt enabled but no windows were configured");
+        }
+        for (const auto& w : cfg.manual_fine_dt_windows_s) {
+            if (!(w.first >= 0.0 && w.first < w.second && w.second <= 1.0) ||
+                !std::isfinite(w.first) || !std::isfinite(w.second)) {
+                throw std::runtime_error("manual fine dt windows must satisfy 0 <= start < end <= 1");
+            }
+        }
+    }
     if (cfg.phase_s.empty()) {
         throw std::runtime_error("phase schedule CSV was not loaded");
     }
@@ -331,8 +346,9 @@ int run_pump(PumpConfig& cfg, const RunOptions& opt) {
         double max_cond_C = 0.0;
 
         const double dnan = std::numeric_limits<double>::quiet_NaN();
-        double max_raw_cond = 0.0;
         double max_actual_solve_cond = 0.0;
+        double max_solve_sv_max = 0.0;
+        double last_sv_max = dnan;
         int min_actual_solve_rank = std::numeric_limits<int>::max();
         double max_relative_raw_residual = 0.0;
         double max_discarded_rhs_fraction = 0.0;
@@ -382,7 +398,7 @@ int run_pump(PumpConfig& cfg, const RunOptions& opt) {
 
         const auto evolution_wall_start = std::chrono::steady_clock::now();
         while (t < cfg.total_time - 1e-15) {
-            const double dt_step = std::min(cfg.dt, cfg.total_time - t);
+            const double dt_step = ecg1d::next_time_step(cfg, t);
             auto terms_at_stage = [&](double stage_t) {
                 return hamiltonian_at(stage_t, cfg, opt);
             };
@@ -395,9 +411,12 @@ int run_pump(PumpConfig& cfg, const RunOptions& opt) {
             min_accepted_dt = std::min(min_accepted_dt, r.used_dt);
             max_accepted_dt = std::max(max_accepted_dt, r.used_dt);
             max_cond_C = std::max(max_cond_C, r.cond_C);
-            if (std::isfinite(r.raw_cond)) max_raw_cond = std::max(max_raw_cond, r.raw_cond);
             if (std::isfinite(r.actual_solve_cond)) {
                 max_actual_solve_cond = std::max(max_actual_solve_cond, r.actual_solve_cond);
+            }
+            if (std::isfinite(r.sv_max)) {
+                max_solve_sv_max = std::max(max_solve_sv_max, r.sv_max);
+                last_sv_max = r.sv_max;
             }
             min_actual_solve_rank = std::min(min_actual_solve_rank, r.effective_rank);
             if (std::isfinite(r.relative_raw_residual)) {
@@ -479,9 +498,10 @@ int run_pump(PumpConfig& cfg, const RunOptions& opt) {
         summary_stats.max_accepted_dt = max_accepted_dt;
         summary_stats.evolution_wall_seconds = evolution_wall_seconds;
         summary_stats.evolution_seconds_per_step = evolution_seconds_per_step;
-        summary_stats.max_raw_cond = max_raw_cond;
         summary_stats.max_actual_solve_cond = max_actual_solve_cond;
         summary_stats.max_cond_C = max_cond_C;
+        summary_stats.max_solve_sv_max = max_solve_sv_max;
+        summary_stats.final_sv_max = last_sv_max;
         summary_stats.min_actual_solve_rank = min_actual_solve_rank;
         summary_stats.final_sv_small[0] = last_sv_small[0];
         summary_stats.final_sv_small[1] = last_sv_small[1];
@@ -514,8 +534,8 @@ int run_pump(PumpConfig& cfg, const RunOptions& opt) {
                       << "delta polarization      = "
                       << trace.polarization_cell.back() - trace.polarization_cell.front() << "\n"
                       << std::scientific << std::setprecision(3)
-                      << "max raw cond            = " << max_raw_cond << "\n"
                       << "max actual-solve cond   = " << max_actual_solve_cond << "\n"
+                      << "max solve sv_max        = " << max_solve_sv_max << "\n"
                       << "min actual-solve rank   = " << min_actual_solve_rank
                       << " / " << param_dim << "\n"
                       << "max raw residual        = " << max_relative_raw_residual << "\n"

@@ -2,6 +2,7 @@
 #include "hamiltonian.hpp"
 #include "hamiltonian_gradient.hpp"
 #include "interaction_kernels.hpp"
+#include "pair_cache.hpp"
 #include "physical_constants.hpp"
 #include <Eigen/Dense>
 #include <algorithm>
@@ -18,6 +19,7 @@ namespace ecg1d {
 struct RhsDiag {
     double raw_cond                   = std::numeric_limits<double>::quiet_NaN();
     double actual_solve_cond          = std::numeric_limits<double>::quiet_NaN();
+    double sv_max                     = std::numeric_limits<double>::quiet_NaN();
     int    effective_rank             = 0;
     double sv_small[3] = {std::numeric_limits<double>::quiet_NaN(),
                           std::numeric_limits<double>::quiet_NaN(),
@@ -38,6 +40,8 @@ static VectorXcd compute_rhs_dz(const std::vector<AlphaIndex>& alpha_z_list,
                                 const SolverConfig& config,
                                 RhsDiag* diag = nullptr) {
     const int d = static_cast<int>(alpha_z_list.size());
+    PairCacheTable pair_cache_table(basis);
+    PairCacheTableScope pair_cache_scope(pair_cache_table);
     // Raw Hermitian PSD metric. Diagnostics and residuals are defined against
     // this unregularized matrix.
     const MatrixXcd C_raw = assemble_C(alpha_z_list, basis).conjugate();
@@ -49,59 +53,57 @@ static VectorXcd compute_rhs_dz(const std::vector<AlphaIndex>& alpha_z_list,
         M += config.lambda_C * MatrixXcd::Identity(d, d);
     }
 
-    Eigen::JacobiSVD<MatrixXcd> svd(M, Eigen::ComputeThinU | Eigen::ComputeThinV);
-    const Eigen::VectorXd sv = svd.singularValues();
-    // Hard truncation uses a RELATIVE cutoff: drop SVD directions of the solved
-    // matrix M whose singular value is below rcond * sv_max.
-    const double thr_rel = config.rcond * sv(0);
-    auto hard_keep = [&](int sv_idx) {
-        return sv(sv_idx) > thr_rel;
+    Eigen::SelfAdjointEigenSolver<MatrixXcd> eig(M);
+    const Eigen::VectorXd ev = eig.eigenvalues();  // ascending for Hermitian M
+    const MatrixXcd V = eig.eigenvectors();
+    // Hard truncation uses a RELATIVE cutoff: drop eigendirections of the
+    // Hermitian solved matrix M whose eigenvalue is below rcond * lambda_max.
+    const double lambda_max = ev(ev.size() - 1);
+    const double thr_rel = config.rcond * lambda_max;
+    auto hard_keep = [&](int ev_idx) {
+        return ev(ev_idx) > thr_rel;
     };
 
-    // Solve M dz = rhs via truncated SVD.
-    const VectorXcd Utb = svd.matrixU().adjoint() * rhs;
-    VectorXcd sinv(sv.size());
+    // Solve M dz = rhs via truncated Hermitian eigendecomposition.
+    const VectorXcd Vtb = V.adjoint() * rhs;
+    VectorXcd coeff(ev.size());
     double discarded_sq = 0.0;
     double total_sq = 0.0;
-    for (int i = 0; i < sv.size(); ++i) {
-        total_sq += std::norm(Utb(i));
+    for (int i = 0; i < ev.size(); ++i) {
+        total_sq += std::norm(Vtb(i));
         if (hard_keep(i)) {
-            sinv(i) = Utb(i) / sv(i);
+            coeff(i) = Vtb(i) / ev(i);
         } else {
-            sinv(i) = Cd(0.0, 0.0);
-            discarded_sq += std::norm(Utb(i));
+            coeff(i) = Cd(0.0, 0.0);
+            discarded_sq += std::norm(Vtb(i));
         }
     }
-    const VectorXcd dz = svd.matrixV() * sinv;
+    const VectorXcd dz = V * coeff;
 
     if (diag) {
         // Conditioning of the truncated solve actually performed: count the
         // directions kept under the active threshold and report the cond of that
-        // retained block. Reporting sv(0)/sv(last) instead would be dominated by
+        // retained block. Reporting ev_max/ev_min instead would be dominated by
         // the dropped tail (near lambda_C) and badly overstate the amplification.
         int r = 0;
         double max_kept_sv = 0.0;
         double min_kept_sv = std::numeric_limits<double>::infinity();
-        for (int i = 0; i < sv.size(); ++i) {
+        for (int i = 0; i < ev.size(); ++i) {
             if (!hard_keep(i)) continue;
             r++;
-            max_kept_sv = std::max(max_kept_sv, sv(i));
-            min_kept_sv = std::min(min_kept_sv, sv(i));
+            max_kept_sv = std::max(max_kept_sv, ev(i));
+            min_kept_sv = std::min(min_kept_sv, ev(i));
         }
         diag->effective_rank = r;
+        diag->sv_max = lambda_max;
         diag->actual_solve_cond = (r > 0)
             ? max_kept_sv / std::max(min_kept_sv, 1e-300)
             : std::numeric_limits<double>::infinity();
-        // sv is descending -> last entries are smallest.
+        // ev is ascending -> first entries are smallest.
         for (int k = 0; k < 3; ++k) {
-            const int idx = static_cast<int>(sv.size()) - 1 - k;
-            diag->sv_small[k] = (idx >= 0) ? sv(idx)
-                                           : std::numeric_limits<double>::quiet_NaN();
+            diag->sv_small[k] = (k < ev.size()) ? ev(k)
+                                                : std::numeric_limits<double>::quiet_NaN();
         }
-        // Raw cond: singular values of the unregularized metric.
-        Eigen::JacobiSVD<MatrixXcd> svd_raw(C_raw);  // singular values only
-        const Eigen::VectorXd svr = svd_raw.singularValues();
-        diag->raw_cond = svr(0) / std::max(svr(svr.size() - 1), 1e-300);
         // Residual back in the ORIGINAL equation (C_raw dz vs rhs).
         const double rhs_norm = rhs.norm();
         diag->relative_raw_residual =
@@ -121,6 +123,7 @@ static void fill_step_result(RealtimeStepResult& result, const RhsDiag& diag) {
     result.cond_C                    = diag.actual_solve_cond;
     result.actual_solve_cond         = diag.actual_solve_cond;
     result.raw_cond                  = diag.raw_cond;
+    result.sv_max                    = diag.sv_max;
     result.effective_rank            = diag.effective_rank;
     result.sv_small[0]               = diag.sv_small[0];
     result.sv_small[1]               = diag.sv_small[1];
@@ -224,6 +227,7 @@ struct DP5StepResult {
     double err_norm;
     double cond_C;
     int    effective_rank;
+    double sv_max;
     double sv_small[3];
     double dz_norm;
 };
@@ -316,6 +320,7 @@ static DP5StepResult realtime_tdvp_step_dp5(
     result.err_norm = err_norm;
     result.cond_C = diag.actual_solve_cond;
     result.effective_rank = diag.effective_rank;
+    result.sv_max = diag.sv_max;
     for (int i = 0; i < 3; ++i) result.sv_small[i] = diag.sv_small[i];
     result.dz_norm = dz_5.norm();
 
@@ -519,7 +524,9 @@ RealtimeEvolutionResult realtime_tdvp_evolution(
                     r.basis = std::move(dp.basis_new);
                     r.used_dt = dp.used_dt;
                     r.cond_C = dp.cond_C;
+                    r.actual_solve_cond = dp.cond_C;
                     r.effective_rank = dp.effective_rank;
+                    r.sv_max = dp.sv_max;
                     for (int i = 0; i < 3; ++i) r.sv_small[i] = dp.sv_small[i];
                     r.dz_norm = dp.dz_norm;
                     dt_current = std::max(rt_cfg.rk45_dt_min,
@@ -623,6 +630,7 @@ RealtimeEvolutionResult realtime_tdvp_evolution(
                       << " <p2>=" << p2_norm
                       << " cond=" << std::scientific << std::setprecision(2)
                       << r.cond_C
+                      << " sv_max=" << r.sv_max
                       << " sv_min3=(" << r.sv_small[2] << "," << r.sv_small[1]
                       << "," << r.sv_small[0] << ")"
                       << " |dz|=" << std::setprecision(2) << r.dz_norm

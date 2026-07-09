@@ -285,7 +285,6 @@ int main() {
 
         // Run-wide aggregates for summary.txt / final judgment.
         const double dnan = std::numeric_limits<double>::quiet_NaN();
-        double max_raw_cond = 0.0;
         double max_actual_solve_cond = 0.0;
         int    min_actual_solve_rank = std::numeric_limits<int>::max();
         double max_relative_raw_residual = 0.0;
@@ -336,7 +335,6 @@ int main() {
             max_cond_C = std::max(max_cond_C, r.cond_C);
 
             // Accumulate linear-algebra health over every step (not just samples).
-            if (std::isfinite(r.raw_cond))           max_raw_cond = std::max(max_raw_cond, r.raw_cond);
             if (std::isfinite(r.actual_solve_cond))  max_actual_solve_cond = std::max(max_actual_solve_cond, r.actual_solve_cond);
             min_actual_solve_rank = std::min(min_actual_solve_rank, r.effective_rank);
             if (std::isfinite(r.relative_raw_residual))      max_relative_raw_residual = std::max(max_relative_raw_residual, r.relative_raw_residual);
@@ -414,7 +412,6 @@ int main() {
         summary_stats.max_accepted_dt = max_accepted_dt;
         summary_stats.evolution_wall_seconds = evolution_wall_seconds;
         summary_stats.evolution_seconds_per_step = evolution_seconds_per_step;
-        summary_stats.max_raw_cond = max_raw_cond;
         summary_stats.max_actual_solve_cond = max_actual_solve_cond;
         summary_stats.max_cond_C = max_cond_C;
         summary_stats.min_actual_solve_rank = min_actual_solve_rank;
@@ -444,7 +441,7 @@ int main() {
                       << "delta polarization      = "
                       << trace.polarization_cell.back() - trace.polarization_cell.front() << "\n"
                       << std::scientific << std::setprecision(3)
-                      << "max raw cond            = " << max_raw_cond << "\n"
+                      << "max raw cond            = disabled\n"
                       << "max actual-solve cond   = " << max_actual_solve_cond << "\n"
                       << "min actual-solve rank   = " << min_actual_solve_rank
                       << " / " << param_dim << "\n"

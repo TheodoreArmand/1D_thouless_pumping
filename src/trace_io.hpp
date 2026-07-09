@@ -32,6 +32,7 @@ struct Trace {
     std::vector<double> raw_cond;
     std::vector<double> actual_solve_cond;
     std::vector<int> actual_solve_rank;
+    std::vector<double> sv_max;
     std::vector<double> sv_min;
     std::vector<double> relative_raw_residual;
     std::vector<double> discarded_rhs_fraction;

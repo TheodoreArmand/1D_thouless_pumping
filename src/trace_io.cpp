@@ -131,6 +131,7 @@ void append_trace_diagnostics(Trace& trace,
     trace.raw_cond.push_back(step_result ? step_result->raw_cond : dnan);
     trace.actual_solve_cond.push_back(step_result ? step_result->actual_solve_cond : dnan);
     trace.actual_solve_rank.push_back(step_result ? step_result->effective_rank : -1);
+    trace.sv_max.push_back(step_result ? step_result->sv_max : dnan);
     trace.sv_min.push_back(step_result ? step_result->sv_small[0] : dnan);
     trace.relative_raw_residual.push_back(step_result ? step_result->relative_raw_residual : dnan);
     trace.discarded_rhs_fraction.push_back(step_result ? step_result->discarded_rhs_fraction : dnan);
@@ -150,7 +151,7 @@ void write_trace_csv(const std::string& path, const Trace& tr) {
         throw std::runtime_error("trace V_gauss length does not match sample count");
     }
     f << "t,phi,norm,E_total,T_kin,V_cos,V_const,V_lattice,x_mean,p_mean,x2,p2,polarization_cell,basis_size,"
-         "raw_cond,actual_solve_cond,actual_solve_rank,sv_min,"
+         "raw_cond,actual_solve_cond,actual_solve_rank,sv_max,sv_min,"
          "relative_raw_residual,discarded_rhs_fraction,"
          "dz_norm,metric_norm,min_re_B,argmin_re_B,min_re_AplusB,argmin_re_AplusB";
     if (include_v_gauss) f << ",V_gauss";
@@ -174,6 +175,7 @@ void write_trace_csv(const std::string& path, const Trace& tr) {
           << tr.raw_cond[i] << ","
           << tr.actual_solve_cond[i] << ","
           << tr.actual_solve_rank[i] << ","
+          << tr.sv_max[i] << ","
           << tr.sv_min[i] << ","
           << tr.relative_raw_residual[i] << ","
           << tr.discarded_rhs_fraction[i] << ","

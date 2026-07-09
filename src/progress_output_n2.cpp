@@ -40,7 +40,7 @@ void write_header(std::ofstream& f) {
          "norm,E_total,T_kin,V_cos,V_const,V_lattice,V_gauss,"
          "x_mean,p_mean,x2,p2,polarization_cell,delta_polarization,"
          "r12_sq,r12_rms,"
-         "raw_cond,actual_solve_cond,actual_solve_rank,sv_min,"
+         "raw_cond,actual_solve_cond,actual_solve_rank,sv_max,sv_min,"
          "relative_raw_residual,discarded_rhs_fraction,"
          "dz_norm,metric_norm,min_re_B,min_re_AplusB\n";
 }
@@ -111,6 +111,7 @@ void N2ProgressWriter::write(int step,
          << trace.raw_cond[idx] << ","
          << trace.actual_solve_cond[idx] << ","
          << trace.actual_solve_rank[idx] << ","
+         << trace.sv_max[idx] << ","
          << trace.sv_min[idx] << ","
          << trace.relative_raw_residual[idx] << ","
          << trace.discarded_rhs_fraction[idx] << ","
@@ -131,8 +132,8 @@ void N2ProgressWriter::write(int step,
               << " Vg=" << v_gauss
               << " norm=" << trace.norm[idx]
               << " rank=" << trace.actual_solve_rank[idx] << "/" << param_dim
-              << " raw_cond=" << std::scientific << std::setprecision(2)
-              << trace.raw_cond[idx]
+              << " sv_max=" << std::scientific << std::setprecision(2)
+              << trace.sv_max[idx]
               << " resid=" << trace.relative_raw_residual[idx]
               << std::defaultfloat << "\n" << std::flush;
 }

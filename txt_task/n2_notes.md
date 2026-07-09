@@ -17,8 +17,11 @@ Source layout:
 Initial state:
 
 - Adjacent-cell bosonic product of band-0 Wannier packets centered near x=2 and x=10.
-- K=24 product Gaussians selected from the six dominant N=1 Wannier Gaussians.
-- Generator check: fidelity vs exact symmetrized product is about 0.9908.
+- Current Vs3/Vl3 full-cycle test uses K=32: 16 dominant product Gaussians plus
+  16 path-pad products. Each packet has four downstream centers with both the
+  broad and narrow N=1 path-pad widths.
+- Generator check: fidelity vs the full N=1 path-pad symmetrized product is
+  about 0.9999928581 for the K=32 Vs3/Vl3 state.
 - Generator energy prediction on the 2D grid:
   - free initial energy: about -1.43891916
   - Gaussian interaction energy for g=0.3 E_rs, sigma=1: about 2.21e-6
@@ -26,7 +29,7 @@ Initial state:
 Cost warning:
 
 The engine is N-general but the current assembly rebuilds a PairCache inside
-every matrix-element/permutation/stage path. N=2, K=24 has a much larger
+every matrix-element/permutation/stage path. N=2, K=32 has a much larger
 constant factor than the N=1 K=16 run, so the committed configs are short
 validation windows (`total_time=12`) only. Full-cycle N=2 pumping should wait
 for PairCache/permutation memoization.

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace pumpconfig {
@@ -26,6 +27,9 @@ struct PumpConfig {
     double pump_period = 0.0;
     double total_time = 0.0;
     double dt = 0.0;
+    bool manual_fine_dt_enabled = false;
+    double manual_fine_dt_factor = 1.0;
+    std::vector<std::pair<double, double>> manual_fine_dt_windows_s;
 
     // Phase schedule CSV with columns s=t/T and phi(s).
     std::string phase_schedule_csv;

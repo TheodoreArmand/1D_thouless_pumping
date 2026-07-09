@@ -2,6 +2,7 @@
 
 #include "physical_constants.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <iomanip>
@@ -23,6 +24,25 @@ double long_cosine_coeff(const pumpconfig::PumpConfig& cfg) {
     return -cfg.Vl;
 }
 
+bool in_manual_fine_window(const pumpconfig::PumpConfig& cfg, double s) {
+    if (!cfg.manual_fine_dt_enabled) return false;
+    for (const auto& w : cfg.manual_fine_dt_windows_s) {
+        if (s >= w.first && s < w.second) return true;
+    }
+    return false;
+}
+
+std::string manual_fine_windows_string(const pumpconfig::PumpConfig& cfg) {
+    std::ostringstream oss;
+    oss << std::setprecision(17);
+    for (size_t i = 0; i < cfg.manual_fine_dt_windows_s.size(); ++i) {
+        if (i) oss << ";";
+        oss << cfg.manual_fine_dt_windows_s[i].first
+            << "-" << cfg.manual_fine_dt_windows_s[i].second;
+    }
+    return oss.str();
+}
+
 }  // namespace
 
 std::string format_output_tag(double x) {
@@ -37,7 +57,43 @@ std::string format_output_tag(double x) {
 }
 
 long long estimate_time_steps(const pumpconfig::PumpConfig& cfg) {
-    return static_cast<long long>(std::ceil(cfg.total_time / cfg.dt));
+    if (!cfg.manual_fine_dt_enabled) {
+        return static_cast<long long>(std::ceil(cfg.total_time / cfg.dt));
+    }
+
+    long long steps = 0;
+    double t = 0.0;
+    constexpr long long max_steps = 1000000000LL;
+    while (t < cfg.total_time - 1e-15) {
+        const double dt_step = next_time_step(cfg, t);
+        if (!(dt_step > 0.0) || !std::isfinite(dt_step)) break;
+        t += dt_step;
+        steps++;
+        if (steps > max_steps) break;
+    }
+    return steps;
+}
+
+double time_step_at(const pumpconfig::PumpConfig& cfg, double t) {
+    if (!cfg.manual_fine_dt_enabled) return cfg.dt;
+    const double s = (cfg.pump_period > 0.0) ? (t / cfg.pump_period) : 0.0;
+    return in_manual_fine_window(cfg, s) ? cfg.dt * cfg.manual_fine_dt_factor : cfg.dt;
+}
+
+double next_time_step(const pumpconfig::PumpConfig& cfg, double t) {
+    double dt_step = time_step_at(cfg, t);
+    if (cfg.manual_fine_dt_enabled) {
+        for (const auto& w : cfg.manual_fine_dt_windows_s) {
+            const double start_t = w.first * cfg.pump_period;
+            const double end_t = w.second * cfg.pump_period;
+            if (t < start_t && t + dt_step > start_t) {
+                dt_step = start_t - t;
+            } else if (t < end_t && t + dt_step > end_t) {
+                dt_step = end_t - t;
+            }
+        }
+    }
+    return std::min(dt_step, cfg.total_time - t);
 }
 
 void write_config_txt(const std::string& path, const pumpconfig::PumpConfig& cfg) {
@@ -58,7 +114,11 @@ void write_config_txt(const std::string& path, const pumpconfig::PumpConfig& cfg
       << "pump_period=" << cfg.pump_period << "\n"
       << "total_time=" << cfg.total_time << "\n"
       << "dt=" << cfg.dt << "\n"
-      << "time_step_mode=fixed\n"
+      << "time_step_mode=" << (cfg.manual_fine_dt_enabled ? "manual_fine_window" : "fixed") << "\n"
+      << "manual_fine_dt_enabled=" << (cfg.manual_fine_dt_enabled ? 1 : 0) << "\n"
+      << "manual_fine_dt_factor=" << cfg.manual_fine_dt_factor << "\n"
+      << "manual_fine_dt_windows_s=" << manual_fine_windows_string(cfg) << "\n"
+      << "manual_fine_dt_min_dt=" << cfg.dt * cfg.manual_fine_dt_factor << "\n"
       << "phase_schedule_csv=" << cfg.phase_schedule_csv << "\n"
       << "phase_schedule_points=" << cfg.phase_s.size() << "\n"
       << "estimated_time_steps=" << estimate_time_steps(cfg) << "\n"
@@ -123,8 +183,12 @@ void write_run_summary_txt(const std::string& path,
       << "lambda_C=" << cfg.lambda_C << "\n"
       << "rcond=" << cfg.rcond << "\n"
       << "param_dim=" << stats.param_dim << "\n"
-      << "time_step_mode=fixed\n"
+      << "time_step_mode=" << (cfg.manual_fine_dt_enabled ? "manual_fine_window" : "fixed") << "\n"
       << "dt=" << cfg.dt << "\n"
+      << "manual_fine_dt_enabled=" << (cfg.manual_fine_dt_enabled ? 1 : 0) << "\n"
+      << "manual_fine_dt_factor=" << cfg.manual_fine_dt_factor << "\n"
+      << "manual_fine_dt_windows_s=" << manual_fine_windows_string(cfg) << "\n"
+      << "manual_fine_dt_min_dt=" << cfg.dt * cfg.manual_fine_dt_factor << "\n"
       << "phase_schedule_csv=" << cfg.phase_schedule_csv << "\n"
       << "phase_schedule_points=" << cfg.phase_s.size() << "\n"
       << "estimated_time_steps=" << estimate_time_steps(cfg) << "\n"
@@ -146,9 +210,11 @@ void write_run_summary_txt(const std::string& path,
       << "polarization_cell_end=" << trace.polarization_cell.back() << "\n"
       << "delta_polarization="
       << trace.polarization_cell.back() - trace.polarization_cell.front() << "\n"
-      << "max_raw_cond=" << stats.max_raw_cond << "\n"
+      << "max_raw_cond=nan  # disabled; raw C condition is not computed\n"
       << "max_actual_solve_cond=" << stats.max_actual_solve_cond << "\n"
       << "max_cond_C=" << stats.max_cond_C << "  # == max_actual_solve_cond (legacy name)\n"
+      << "max_solve_sv_max=" << stats.max_solve_sv_max << "\n"
+      << "final_sv_max=" << stats.final_sv_max << "\n"
       << "min_actual_solve_rank=" << stats.min_actual_solve_rank << "\n"
       << "final_sv_small_0=" << stats.final_sv_small[0] << "\n"
       << "final_sv_small_1=" << stats.final_sv_small[1] << "\n"

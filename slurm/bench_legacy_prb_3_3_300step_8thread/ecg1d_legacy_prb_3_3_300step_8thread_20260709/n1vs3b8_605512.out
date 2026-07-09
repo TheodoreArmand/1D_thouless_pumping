@@ -1,0 +1,47 @@
+job_id=605512
+job_name=n1vs3b8
+partition=epyc
+node_list=cent
+submit_dir=/home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping
+workdir=/home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping
+cpus_per_task=8
+mem_per_node=4096
+config=legacy_prb_3_3 current N=1 K=16 dt=0.002 total_time=0.6 steps=300
+output_root=out/bench_legacy_prb_3_3_300step_8thread
+start_time=2026-07-09T13:01:32+08:00
+lambda_C=1.00e-08 rcond=1.00e-04 | TDVP param dimension=48
+progress N=1 step 0/300 0.0% t=0.00000 eta_s=nan E=-1.07658598 P=-0.00016571 dP=0.00000000 norm=1.00000000 rank=-1/48 sv_max=nan resid=nan
+progress N=1 step 25/300 8.3% t=0.05000 eta_s=12.5 E=-1.07658502 P=-0.00016574 dP=-0.00000003 norm=1.00000000 rank=16/48 sv_max=4.26e+00 resid=5.18e-02
+progress N=1 step 50/300 16.7% t=0.10000 eta_s=11.3 E=-1.07657907 P=-0.00016612 dP=-0.00000040 norm=1.00000000 rank=16/48 sv_max=4.26e+00 resid=5.36e-02
+progress N=1 step 75/300 25.0% t=0.15000 eta_s=10.2 E=-1.07656814 P=-0.00016720 dP=-0.00000149 norm=1.00000000 rank=16/48 sv_max=4.26e+00 resid=5.53e-02
+progress N=1 step 100/300 33.3% t=0.20000 eta_s=9.1 E=-1.07655226 P=-0.00016926 dP=-0.00000355 norm=1.00000000 rank=16/48 sv_max=4.27e+00 resid=5.65e-02
+progress N=1 step 125/300 41.7% t=0.25000 eta_s=7.9 E=-1.07653143 P=-0.00017259 dP=-0.00000688 norm=1.00000000 rank=16/48 sv_max=4.27e+00 resid=5.70e-02
+progress N=1 step 150/300 50.0% t=0.30000 eta_s=6.8 E=-1.07650568 P=-0.00017756 dP=-0.00001185 norm=1.00000000 rank=16/48 sv_max=4.26e+00 resid=5.69e-02
+progress N=1 step 175/300 58.3% t=0.35000 eta_s=5.7 E=-1.07647506 P=-0.00018465 dP=-0.00001894 norm=1.00000000 rank=16/48 sv_max=4.26e+00 resid=5.64e-02
+progress N=1 step 200/300 66.7% t=0.40000 eta_s=4.5 E=-1.07643958 P=-0.00019444 dP=-0.00002873 norm=1.00000000 rank=16/48 sv_max=4.25e+00 resid=5.56e-02
+progress N=1 step 225/300 75.0% t=0.45000 eta_s=3.4 E=-1.07639931 P=-0.00020749 dP=-0.00004178 norm=1.00000000 rank=16/48 sv_max=4.25e+00 resid=5.38e-02
+progress N=1 step 250/300 83.3% t=0.50000 eta_s=2.2 E=-1.07635427 P=-0.00022434 dP=-0.00005862 norm=1.00000000 rank=16/48 sv_max=4.25e+00 resid=5.08e-02
+progress N=1 step 275/300 91.7% t=0.55000 eta_s=1.1 E=-1.07630452 P=-0.00024543 dP=-0.00007972 norm=1.00000000 rank=16/48 sv_max=4.25e+00 resid=4.69e-02
+progress N=1 step 300/300 100.0% t=0.60000 eta_s=nan E=-1.07625012 P=-0.00027114 dP=-0.00010543 norm=1.00000000 rank=16/48 sv_max=4.26e+00 resid=4.32e-02
+[write] out/bench_legacy_prb_3_3_300step_8thread/a8p000_K16_tmax0p600_VsER3p000_VlER3p000/trace.csv (13 samples)
+[write] out/bench_legacy_prb_3_3_300step_8thread/a8p000_K16_tmax0p600_VsER3p000_VlER3p000/snapshots.csv (13 events, 208 rows)
+[write] out/bench_legacy_prb_3_3_300step_8thread/a8p000_K16_tmax0p600_VsER3p000_VlER3p000/basis_initial.csv
+[write] out/bench_legacy_prb_3_3_300step_8thread/a8p000_K16_tmax0p600_VsER3p000_VlER3p000/basis_final.csv
+[write] out/bench_legacy_prb_3_3_300step_8thread/a8p000_K16_tmax0p600_VsER3p000_VlER3p000/summary.txt
+=== summary ===
+param_dim               = 48
+polarization_cell start = -0.00017
+polarization_cell end   = -0.00027
+delta polarization      = -0.00011
+max raw cond            = disabled
+max actual-solve cond   = 4.206e+03
+min actual-solve rank   = 16 / 48
+final sv_min(3)         = (1.000e-08, 1.000e-08, 1.000e-08)
+max raw residual        = 5.705e-02
+max discarded rhs frac  = 5.705e-02
+min Re(B)   over run    = 5.634e-01
+min Re(A+B) over run    = 5.634e-01
+norm drift (rel)        = 1.998e-15
+energy drift (rel)      = 3.120e-04
+x2 growth ratio         = 9.979e-01
+end_time=2026-07-09T13:01:46+08:00
