@@ -172,14 +172,25 @@ static Cd addsn_kinetic_dKernel(int alpha_1, bool Real,
 Cd calculate_Hamiltonian_kinetic_partial(int a1, int a2, int a3, int a4,
                                           bool Real,
                                           const std::vector<BasisParams>& basis) {
+    HamiltonianGradientContext ctx;
+    ctx.S = overlap(basis);
+    ctx.kinetic_value = kinetic_energy_functional(basis);
+    const Cd dS = partial_z_first(a1, Real, basis, a2, a3, a4);
+    return calculate_Hamiltonian_kinetic_partial(a1, a2, a3, a4, Real, basis, ctx, dS);
+}
+
+Cd calculate_Hamiltonian_kinetic_partial(int a1, int a2, int a3, int a4,
+                                          bool Real,
+                                          const std::vector<BasisParams>& basis,
+                                          const HamiltonianGradientContext& ctx,
+                                          Cd dS) {
     int basis_n = static_cast<int>(basis.size());
     int N = basis[0].N();
     PermutationSet perms = PermutationSet::generate(N);
     double coeff = -(hbar * hbar) / (2.0 * mass);
 
-    Cd S = overlap(basis);
-    Cd H_val = kinetic_energy_functional(basis);
-    Cd dS = partial_z_first(a1, Real, basis, a2, a3, a4);
+    const Cd S = ctx.S;
+    const Cd H_val = ctx.kinetic_value;
 
     // Compute d<H>/dz (both dMG and dKernel parts)
     Cd dH(0, 0);
@@ -199,6 +210,7 @@ Cd calculate_Hamiltonian_kinetic_partial(int a1, int a2, int a3, int a4,
             for (int i = 0; i < basis_n; i++) {
                 Cd con_ui = std::conj(basis[i].u);
                 for (int j = 0; j < basis_n; j++) {
+                    if (a2 != basis[i].name && a2 != basis[j].name) continue;
                     Cd uj = basis[j].u;
                     dH += con_ui * uj * fn(basis[i], basis[j]);
                 }
@@ -232,6 +244,21 @@ Cd calculate_Hamiltonian_kinetic_partial(int a1, int a2, int a3, int a4,
 Cd calculate_Hamiltonian_delta_partial(int a1, int a2, int a3, int a4,
                                         bool Real,
                                         const std::vector<BasisParams>& basis) {
+    int N = basis[0].N();
+    if (N < 2) return Cd(0, 0);
+
+    HamiltonianGradientContext ctx;
+    ctx.S = overlap(basis);
+    ctx.delta_value = Delta_contact_functional(basis);
+    const Cd dS = partial_z_first(a1, Real, basis, a2, a3, a4);
+    return calculate_Hamiltonian_delta_partial(a1, a2, a3, a4, Real, basis, ctx, dS);
+}
+
+Cd calculate_Hamiltonian_delta_partial(int a1, int a2, int a3, int a4,
+                                        bool Real,
+                                        const std::vector<BasisParams>& basis,
+                                        const HamiltonianGradientContext& ctx,
+                                        Cd dS) {
     int basis_n = static_cast<int>(basis.size());
     int N = basis[0].N();
     if (N < 2) return Cd(0, 0);
@@ -239,9 +266,8 @@ Cd calculate_Hamiltonian_delta_partial(int a1, int a2, int a3, int a4,
     PermutationSet perms = PermutationSet::generate(N);
     double coeff = g_contact;
 
-    Cd S = overlap(basis);
-    Cd H_val = Delta_contact_functional(basis);
-    Cd dS = partial_z_first(a1, Real, basis, a2, a3, a4);
+    const Cd S = ctx.S;
+    const Cd H_val = ctx.delta_value;
 
     Cd dH(0, 0);
 
@@ -254,8 +280,10 @@ Cd calculate_Hamiltonian_delta_partial(int a1, int a2, int a3, int a4,
                 dH += basis[t].u * fn(basis[a2], basis[t]);
         } else {
             for (int i = 0; i < basis_n; i++)
-                for (int j = 0; j < basis_n; j++)
+                for (int j = 0; j < basis_n; j++) {
+                    if (a2 != basis[i].name && a2 != basis[j].name) continue;
                     dH += std::conj(basis[i].u) * basis[j].u * fn(basis[i], basis[j]);
+                }
         }
     };
 
@@ -321,6 +349,21 @@ Cd calculate_Hamiltonian_delta_partial(int a1, int a2, int a3, int a4,
 Cd calculate_Hamiltonian_gaussian_partial(int a1, int a2, int a3, int a4,
                                            bool Real,
                                            const std::vector<BasisParams>& basis) {
+    int N = basis[0].N();
+    if (N < 2) return Cd(0, 0);
+
+    HamiltonianGradientContext ctx;
+    ctx.S = overlap(basis);
+    ctx.gaussian_value = Gaussian_interaction_functional(basis);
+    const Cd dS = partial_z_first(a1, Real, basis, a2, a3, a4);
+    return calculate_Hamiltonian_gaussian_partial(a1, a2, a3, a4, Real, basis, ctx, dS);
+}
+
+Cd calculate_Hamiltonian_gaussian_partial(int a1, int a2, int a3, int a4,
+                                           bool Real,
+                                           const std::vector<BasisParams>& basis,
+                                           const HamiltonianGradientContext& ctx,
+                                           Cd dS) {
     int basis_n = static_cast<int>(basis.size());
     int N = basis[0].N();
     if (N < 2) return Cd(0, 0);
@@ -328,9 +371,8 @@ Cd calculate_Hamiltonian_gaussian_partial(int a1, int a2, int a3, int a4,
     PermutationSet perms = PermutationSet::generate(N);
     double coeff = g_gauss;
 
-    Cd S = overlap(basis);
-    Cd H_val = Gaussian_interaction_functional(basis);
-    Cd dS = partial_z_first(a1, Real, basis, a2, a3, a4);
+    const Cd S = ctx.S;
+    const Cd H_val = ctx.gaussian_value;
 
     Cd dH(0, 0);
 
@@ -343,8 +385,10 @@ Cd calculate_Hamiltonian_gaussian_partial(int a1, int a2, int a3, int a4,
                 dH += basis[t].u * fn(basis[a2], basis[t]);
         } else {
             for (int i = 0; i < basis_n; i++)
-                for (int j = 0; j < basis_n; j++)
+                for (int j = 0; j < basis_n; j++) {
+                    if (a2 != basis[i].name && a2 != basis[j].name) continue;
                     dH += std::conj(basis[i].u) * basis[j].u * fn(basis[i], basis[j]);
+                }
         }
     };
 
@@ -411,13 +455,29 @@ Cd calculate_Hamiltonian_general_cosine_partial(
     const std::vector<CosineTerm>& terms) {
     if (terms.empty()) return Cd(0, 0);
 
+    HamiltonianGradientContext ctx;
+    ctx.S = overlap(basis);
+    ctx.cosine_value = general_cosine_functional(basis, terms);
+    const Cd dS = partial_z_first(a1, Real, basis, a2, a3, a4);
+    return calculate_Hamiltonian_general_cosine_partial(
+        a1, a2, a3, a4, Real, basis, terms, ctx, dS);
+}
+
+Cd calculate_Hamiltonian_general_cosine_partial(
+    int a1, int a2, int a3, int a4,
+    bool Real,
+    const std::vector<BasisParams>& basis,
+    const std::vector<CosineTerm>& terms,
+    const HamiltonianGradientContext& ctx,
+    Cd dS) {
+    if (terms.empty()) return Cd(0, 0);
+
     int basis_n = static_cast<int>(basis.size());
     int N = basis[0].N();
     PermutationSet perms = PermutationSet::generate(N);
 
-    Cd S = overlap(basis);
-    Cd H_val = general_cosine_functional(basis, terms);
-    Cd dS = partial_z_first(a1, Real, basis, a2, a3, a4);
+    const Cd S = ctx.S;
+    const Cd H_val = ctx.cosine_value;
 
     Cd dH(0, 0);
 
@@ -430,8 +490,10 @@ Cd calculate_Hamiltonian_general_cosine_partial(
                 dH += basis[t].u * fn(basis[a2], basis[t]);
         } else {
             for (int i = 0; i < basis_n; i++)
-                for (int j = 0; j < basis_n; j++)
+                for (int j = 0; j < basis_n; j++) {
+                    if (a2 != basis[i].name && a2 != basis[j].name) continue;
                     dH += std::conj(basis[i].u) * basis[j].u * fn(basis[i], basis[j]);
+                }
         }
     };
 

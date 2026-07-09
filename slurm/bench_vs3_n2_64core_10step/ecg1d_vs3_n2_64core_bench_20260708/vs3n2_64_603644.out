@@ -1,0 +1,78 @@
+job_id=603644
+job_name=vs3n2_64
+partition=epyc
+node_list=doom
+submit_dir=/home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping
+workdir=/home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping
+cpus_per_task=64
+mem_per_node=32768
+start_time=2026-07-08T16:57:23+08:00
+config=legacy_prb_3_3_n2_pathpad lambda_C=1.00e-08 rcond=1.00e-04 | TDVP param dimension=120
+progress N=2 step 0/10 0.0% t=0.00000 eta_s=nan E=-2.15314592 P=0.99959650 dP=0.00000000 r12=8.04559620 Vg=0.00000000 norm=1.00000000 rank=-1/120 raw_cond=nan resid=nan
+initial t=0.00000 tau=0.00000 E=-2.1531459207 <X>/a=0.9995965039 norm=1.0000000000 V_gauss=0.0000000000
+progress N=2 step 1/10 10.0% t=0.00200 eta_s=73.5 E=-2.15314607 P=0.99959650 dP=0.00000000 r12=8.04559620 Vg=0.00000000 norm=1.00000000 rank=27/120 raw_cond=3.84e+16 resid=4.42e-02
+progress N=2 step 2/10 20.0% t=0.00400 eta_s=66.6 E=-2.15314621 P=0.99959651 dP=0.00000000 r12=8.04559620 Vg=0.00000000 norm=1.00000000 rank=27/120 raw_cond=6.87e+18 resid=4.42e-02
+progress N=2 step 3/10 30.0% t=0.00600 eta_s=58.4 E=-2.15314632 P=0.99959651 dP=0.00000001 r12=8.04559620 Vg=0.00000000 norm=1.00000000 rank=27/120 raw_cond=3.87e+16 resid=4.43e-02
+progress N=2 step 4/10 40.0% t=0.00800 eta_s=50.5 E=-2.15314643 P=0.99959651 dP=0.00000001 r12=8.04559620 Vg=0.00000000 norm=1.00000000 rank=27/120 raw_cond=6.96e+16 resid=4.44e-02
+progress N=2 step 5/10 50.0% t=0.01000 eta_s=42.1 E=-2.15314651 P=0.99959652 dP=0.00000001 r12=8.04559620 Vg=0.00000000 norm=1.00000000 rank=27/120 raw_cond=5.81e+17 resid=4.45e-02
+progress N=2 step 6/10 60.0% t=0.01200 eta_s=33.7 E=-2.15314658 P=0.99959652 dP=0.00000002 r12=8.04559619 Vg=0.00000000 norm=1.00000000 rank=27/120 raw_cond=3.83e+16 resid=4.46e-02
+progress N=2 step 7/10 70.0% t=0.01400 eta_s=25.3 E=-2.15314664 P=0.99959653 dP=0.00000003 r12=8.04559619 Vg=0.00000000 norm=1.00000000 rank=27/120 raw_cond=8.92e+17 resid=4.46e-02
+progress N=2 step 8/10 80.0% t=0.01600 eta_s=16.9 E=-2.15314668 P=0.99959654 dP=0.00000003 r12=8.04559619 Vg=0.00000000 norm=1.00000000 rank=27/120 raw_cond=6.70e+18 resid=4.47e-02
+progress N=2 step 9/10 90.0% t=0.01800 eta_s=8.4 E=-2.15314670 P=0.99959654 dP=0.00000004 r12=8.04559619 Vg=0.00000000 norm=1.00000000 rank=27/120 raw_cond=1.17e+17 resid=4.48e-02
+progress N=2 step 10/10 100.0% t=0.02000 eta_s=nan E=-2.15314670 P=0.99959655 dP=0.00000005 r12=8.04559619 Vg=0.00000000 norm=1.00000000 rank=27/120 raw_cond=1.41e+18 resid=4.49e-02
+[write] out/bench_vs3_n2_64core_10step/free/a8p000_K24_tmax0p020_VsER3p000_VlER3p000/trace.csv (11 samples)
+[write] out/bench_vs3_n2_64core_10step/free/a8p000_K24_tmax0p020_VsER3p000_VlER3p000/n2_trace.csv (11 samples)
+[write] out/bench_vs3_n2_64core_10step/free/a8p000_K24_tmax0p020_VsER3p000_VlER3p000/snapshots.csv (2 events, 48 rows)
+[write] out/bench_vs3_n2_64core_10step/free/a8p000_K24_tmax0p020_VsER3p000_VlER3p000/basis_initial.csv
+[write] out/bench_vs3_n2_64core_10step/free/a8p000_K24_tmax0p020_VsER3p000_VlER3p000/basis_final.csv
+[write] out/bench_vs3_n2_64core_10step/free/a8p000_K24_tmax0p020_VsER3p000_VlER3p000/summary.txt
+=== summary ===
+param_dim               = 120
+polarization_cell start = 1
+polarization_cell end   = 1
+delta polarization      = 4.9e-08
+max raw cond            = 6.871e+18
+max actual-solve cond   = 2.962e+03
+min actual-solve rank   = 27 / 120
+max raw residual        = 4.491e-02
+max discarded rhs frac  = 4.491e-02
+min Re(B)   over run    = 5.744e-01
+min Re(A+B) over run    = 5.744e-01
+norm drift (rel)        = 8.882e-16
+energy drift (rel)      = 3.643e-07
+x2 growth ratio         = 1.000e+00
+config=legacy_prb_3_3_n2_pathpad_gauss lambda_C=1.00e-08 rcond=1.00e-04 | TDVP param dimension=192
+progress N=2 step 0/10 0.0% t=0.00000 eta_s=nan E=-2.15314519 P=0.99959650 dP=0.00000000 r12=8.04559620 Vg=0.00000073 norm=1.00000000 rank=-1/192 raw_cond=nan resid=nan
+initial t=0.00000 tau=0.00000 E=-2.1531451883 <X>/a=0.9995965039 norm=1.0000000000 V_gauss=0.0000007324
+progress N=2 step 1/10 10.0% t=0.00200 eta_s=206.6 E=-2.15314534 P=0.99959650 dP=0.00000000 r12=8.04559620 Vg=0.00000073 norm=1.00000000 rank=28/192 raw_cond=4.97e+18 resid=8.44e-02
+progress N=2 step 2/10 20.0% t=0.00400 eta_s=186.9 E=-2.15314547 P=0.99959651 dP=0.00000000 r12=8.04559619 Vg=0.00000073 norm=1.00000000 rank=28/192 raw_cond=1.05e+18 resid=8.53e-02
+progress N=2 step 3/10 30.0% t=0.00600 eta_s=164.7 E=-2.15314559 P=0.99959651 dP=0.00000001 r12=8.04559619 Vg=0.00000073 norm=1.00000000 rank=28/192 raw_cond=2.85e+17 resid=8.61e-02
+progress N=2 step 4/10 40.0% t=0.00800 eta_s=141.9 E=-2.15314569 P=0.99959652 dP=0.00000001 r12=8.04559618 Vg=0.00000073 norm=1.00000000 rank=28/192 raw_cond=4.91e+17 resid=8.70e-02
+progress N=2 step 5/10 50.0% t=0.01000 eta_s=118.2 E=-2.15314578 P=0.99959652 dP=0.00000002 r12=8.04559616 Vg=0.00000073 norm=1.00000000 rank=28/192 raw_cond=3.03e+17 resid=8.79e-02
+progress N=2 step 6/10 60.0% t=0.01200 eta_s=94.7 E=-2.15314585 P=0.99959653 dP=0.00000003 r12=8.04559615 Vg=0.00000073 norm=1.00000000 rank=28/192 raw_cond=2.99e+17 resid=8.88e-02
+progress N=2 step 7/10 70.0% t=0.01400 eta_s=71.2 E=-2.15314591 P=0.99959654 dP=0.00000004 r12=8.04559613 Vg=0.00000073 norm=1.00000000 rank=28/192 raw_cond=9.77e+17 resid=8.98e-02
+progress N=2 step 8/10 80.0% t=0.01600 eta_s=47.6 E=-2.15314594 P=0.99959655 dP=0.00000005 r12=8.04559611 Vg=0.00000073 norm=1.00000000 rank=28/192 raw_cond=1.01e+18 resid=9.07e-02
+progress N=2 step 9/10 90.0% t=0.01800 eta_s=23.8 E=-2.15314597 P=0.99959656 dP=0.00000006 r12=8.04559608 Vg=0.00000073 norm=1.00000000 rank=28/192 raw_cond=2.20e+18 resid=9.16e-02
+progress N=2 step 10/10 100.0% t=0.02000 eta_s=nan E=-2.15314597 P=0.99959658 dP=0.00000007 r12=8.04559606 Vg=0.00000073 norm=1.00000000 rank=28/192 raw_cond=8.18e+17 resid=9.26e-02
+[write] out/bench_vs3_n2_64core_10step/gauss/a8p000_K24_tmax0p020_VsER3p000_VlER3p000/trace.csv (11 samples)
+[write] out/bench_vs3_n2_64core_10step/gauss/a8p000_K24_tmax0p020_VsER3p000_VlER3p000/n2_trace.csv (11 samples)
+[write] out/bench_vs3_n2_64core_10step/gauss/a8p000_K24_tmax0p020_VsER3p000_VlER3p000/snapshots.csv (2 events, 48 rows)
+[write] out/bench_vs3_n2_64core_10step/gauss/a8p000_K24_tmax0p020_VsER3p000_VlER3p000/basis_initial.csv
+[write] out/bench_vs3_n2_64core_10step/gauss/a8p000_K24_tmax0p020_VsER3p000_VlER3p000/basis_final.csv
+[write] out/bench_vs3_n2_64core_10step/gauss/a8p000_K24_tmax0p020_VsER3p000_VlER3p000/summary.txt
+=== summary ===
+param_dim               = 192
+polarization_cell start = 1
+polarization_cell end   = 1
+delta polarization      = 7.1e-08
+max raw cond            = 4.967e+18
+max actual-solve cond   = 8.951e+03
+min actual-solve rank   = 28 / 192
+max raw residual        = 9.256e-02
+max discarded rhs frac  = 9.256e-02
+min Re(B)   over run    = 5.744e-01
+min Re(A+B) over run    = 5.744e-01
+norm drift (rel)        = 3.886e-15
+energy drift (rel)      = 3.643e-07
+x2 growth ratio         = 1.000e+00
+end_time=2026-07-08T17:02:46+08:00

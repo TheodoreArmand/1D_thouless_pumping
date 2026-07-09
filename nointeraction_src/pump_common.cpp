@@ -316,6 +316,7 @@ int run_pump(PumpConfig& cfg, const RunOptions& opt) {
 
         std::vector<ecg1d::AlphaIndex> alpha = make_alpha_list(cfg.N, cfg.K, opt.evolve_A);
         const int param_dim = static_cast<int>(alpha.size());
+        const long long steps_total_est = ecg1d::estimate_time_steps(cfg);
         if (param_dim == 0) throw std::runtime_error("TDVP parameter list is empty");
 
         std::cout << "config=" << cfg.config_name
@@ -326,6 +327,7 @@ int run_pump(PumpConfig& cfg, const RunOptions& opt) {
         ecg1d::SnapshotSaver snapshots(task_dir);
         ecg1d::Trace trace;
         N2Diagnostics n2_diag;
+        ecg1d::N2ProgressWriter progress(task_dir);
         double max_cond_C = 0.0;
 
         const double dnan = std::numeric_limits<double>::quiet_NaN();
@@ -354,6 +356,10 @@ int run_pump(PumpConfig& cfg, const RunOptions& opt) {
         }
         sample_n2_diagnostics(basis, t, phi0, terms0, n2_diag);
         snapshots.save("initial", step, t, phi0, basis);
+        progress.write(
+            step, steps_total_est, cfg.total_time, 0.0, 0.0, param_dim, trace, trace.t.size() - 1,
+            n2_diag.r12_sq.empty() ? dnan : n2_diag.r12_sq.back(),
+            n2_diag.V_gauss.empty() ? dnan : n2_diag.V_gauss.back());
         std::cout << "initial"
                   << " t=" << std::fixed << std::setprecision(5) << trace.t.front()
                   << " tau=" << phi0
@@ -429,24 +435,14 @@ int run_pump(PumpConfig& cfg, const RunOptions& opt) {
                 ecg1d::append_trace_diagnostics(trace, wmon, &r);
                 sample_n2_diagnostics(basis, t, phi, terms_sample, n2_diag);
                 const size_t idx = trace.t.size() - 1;
-                std::cout << "step " << std::setw(5) << step
-                          << " t=" << std::fixed << std::setprecision(5) << t
-                          << " tau=" << phi
-                          << " E=" << std::setprecision(8) << trace.E_total[idx]
-                          << " <X>/a=" << trace.polarization_cell[idx]
-                          << " norm=" << trace.norm[idx]
-                          << " raw_cond=" << std::scientific << std::setprecision(2) << r.raw_cond
-                          << " solve_cond=" << r.actual_solve_cond
-                          << " rank=" << r.effective_rank << "/" << param_dim
-                          << " raw_resid=" << r.relative_raw_residual
-                          << " dt=" << r.used_dt
-                          << " |dz|=" << r.dz_norm
-                          << " minReB=" << wmon.min_re_B << "@" << wmon.argmin_re_B
-                          << " minRe(A+B)=" << wmon.min_re_AplusB << "@" << wmon.argmin_re_AplusB;
-                if (!trace.V_gauss.empty()) {
-                    std::cout << " V_gauss=" << trace.V_gauss[idx];
-                }
-                std::cout << std::defaultfloat << "\n";
+                const auto progress_wall_now = std::chrono::steady_clock::now();
+                const double progress_wall_seconds =
+                    std::chrono::duration<double>(progress_wall_now - evolution_wall_start).count();
+                progress.write(
+                    step, steps_total_est, cfg.total_time, r.used_dt,
+                    progress_wall_seconds, param_dim, trace, idx,
+                    n2_diag.r12_sq.empty() ? dnan : n2_diag.r12_sq.back(),
+                    n2_diag.V_gauss.empty() ? dnan : n2_diag.V_gauss.back());
             }
         }
 

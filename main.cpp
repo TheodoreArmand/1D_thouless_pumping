@@ -270,6 +270,7 @@ int main() {
 
         std::vector<AlphaIndex> alpha = make_alpha_list(cfg.N, cfg.K);
         const int param_dim = static_cast<int>(alpha.size());
+        const long long steps_total_est = estimate_time_steps(cfg);
         if (param_dim == 0) {
             throw std::runtime_error("TDVP parameter list is empty");
         }
@@ -279,6 +280,7 @@ int main() {
 
         SnapshotSaver snapshots(task_dir);
         Trace trace;
+        N1ProgressWriter progress(task_dir);
         double max_cond_C = 0.0;
 
         // Run-wide aggregates for summary.txt / final judgment.
@@ -306,6 +308,8 @@ int main() {
             append_trace_diagnostics(trace, w0, nullptr);
         }
         snapshots.save("initial", step, t, 0.0, basis);
+        progress.write(
+            step, steps_total_est, cfg.total_time, 0.0, 0.0, param_dim, trace, trace.t.size() - 1);
 
         auto ensure_finite_basis = [&](const char* where, int next_step, double next_t) {
             if (!basis_all_finite(basis)) {
@@ -371,21 +375,12 @@ int main() {
                     basis, t, phi, pump_hamiltonian_at(t, cfg), cfg.lattice_a, trace);
                 append_trace_diagnostics(trace, wmon, &r);
                 const size_t idx = trace.t.size() - 1;
-                std::cout << "step " << std::setw(5) << step
-                          << " t=" << std::fixed << std::setprecision(5) << t
-                          << " tau=" << phi
-                          << " E=" << std::setprecision(8) << trace.E_total[idx]
-                          << " <x>/a=" << trace.polarization_cell[idx]
-                          << " norm=" << trace.norm[idx]
-                          << " raw_cond=" << std::scientific << std::setprecision(2) << r.raw_cond
-                          << " solve_cond=" << r.actual_solve_cond
-                          << " rank=" << r.effective_rank << "/" << param_dim
-                          << " raw_resid=" << r.relative_raw_residual;
-                std::cout << " dt=" << r.used_dt
-                          << " |dz|=" << r.dz_norm
-                          << " minReB=" << wmon.min_re_B << "@" << wmon.argmin_re_B
-                          << " minRe(A+B)=" << wmon.min_re_AplusB << "@" << wmon.argmin_re_AplusB
-                          << std::defaultfloat << "\n";
+                const auto progress_wall_now = std::chrono::steady_clock::now();
+                const double progress_wall_seconds =
+                    std::chrono::duration<double>(progress_wall_now - evolution_wall_start).count();
+                progress.write(
+                    step, steps_total_est, cfg.total_time, r.used_dt,
+                    progress_wall_seconds, param_dim, trace, idx);
             }
         }
         const auto evolution_wall_end = std::chrono::steady_clock::now();

@@ -25,6 +25,8 @@ set(ECG_SRC
     src/observable_derivatives.cpp
     src/pair_cache.cpp
     src/permutation.cpp
+    src/progress_output_n1.cpp
+    src/progress_output_n2.cpp
     src/realtime_tdvp.cpp
     src/run_report.cpp
     src/snapshot_io.cpp

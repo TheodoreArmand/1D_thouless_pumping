@@ -9,6 +9,19 @@ namespace ecg1d {
 MatrixXcd assemble_C(const std::vector<AlphaIndex>& alpha_z_list,
                      const std::vector<BasisParams>& basis) {
     const int d = static_cast<int>(alpha_z_list.size());
+    const Cd S = overlap(basis);
+    VectorXcd first_real = VectorXcd::Zero(d);
+    VectorXcd first_false = VectorXcd::Zero(d);
+
+    #pragma omp parallel for schedule(static)
+    for (int a = 0; a < d; a++) {
+        const auto& alpha = alpha_z_list[a];
+        first_real(a) = partial_z_first(alpha.a1, /*Real=*/true, basis,
+                                        alpha.a2, alpha.a3, alpha.a4);
+        first_false(a) = partial_z_first(alpha.a1, /*Real=*/false, basis,
+                                         alpha.a2, alpha.a3, alpha.a4);
+    }
+
     MatrixXcd C_mat = MatrixXcd::Zero(d, d);
 
     #pragma omp parallel for collapse(2) schedule(static)
@@ -16,9 +29,11 @@ MatrixXcd assemble_C(const std::vector<AlphaIndex>& alpha_z_list,
         for (int b = 0; b < d; b++) {
             const auto& alpha = alpha_z_list[a];
             const auto& beta = alpha_z_list[b];
-            C_mat(a, b) = calculate_C(alpha.a1, alpha.a2, alpha.a3, alpha.a4,
-                                       beta.a1, beta.a2, beta.a3, beta.a4,
-                                       basis);
+            const Cd second = partial_z_second(
+                alpha.a1, beta.a1, basis,
+                alpha.a2, alpha.a3, alpha.a4,
+                beta.a2, beta.a3, beta.a4);
+            C_mat(a, b) = -first_real(a) * first_false(b) / (S * S) + second / S;
         }
     }
     return C_mat;
@@ -26,27 +41,58 @@ MatrixXcd assemble_C(const std::vector<AlphaIndex>& alpha_z_list,
 
 namespace {
 
+HamiltonianGradientContext make_gradient_context(const std::vector<BasisParams>& basis,
+                                                 const HamiltonianTerms& terms) {
+    HamiltonianGradientContext ctx;
+    const int N = basis[0].N();
+    ctx.S = overlap(basis);
+    if (terms.kinetic) {
+        ctx.kinetic_value = kinetic_energy_functional(basis);
+    }
+    if (terms.delta && N >= 2) {
+        ctx.delta_value = Delta_contact_functional(basis);
+    }
+    if (terms.gaussian && N >= 2) {
+        ctx.gaussian_value = Gaussian_interaction_functional(basis);
+    }
+    if (!terms.cosine_terms.empty()) {
+        ctx.cosine_value = general_cosine_functional(basis, terms.cosine_terms);
+    }
+    return ctx;
+}
+
 Cd grad_H_for_alpha(const AlphaIndex& alpha,
                     const std::vector<BasisParams>& basis,
-                    const HamiltonianTerms& terms) {
+                    const HamiltonianTerms& terms,
+                    const HamiltonianGradientContext& ctx) {
     const int N = basis[0].N();
     Cd result(0, 0);
+    const bool has_variable_term =
+        terms.kinetic ||
+        (terms.delta && N >= 2) ||
+        (terms.gaussian && N >= 2) ||
+        !terms.cosine_terms.empty();
+    if (!has_variable_term) return result;
+
+    const Cd dS = partial_z_first(alpha.a1, /*Real=*/false, basis,
+                                  alpha.a2, alpha.a3, alpha.a4);
 
     if (terms.kinetic) {
         result += calculate_Hamiltonian_kinetic_partial(alpha.a1, alpha.a2, alpha.a3, alpha.a4,
-                                                        /*Real=*/false, basis);
+                                                        /*Real=*/false, basis, ctx, dS);
     }
     if (terms.delta && N >= 2) {
         result += calculate_Hamiltonian_delta_partial(alpha.a1, alpha.a2, alpha.a3, alpha.a4,
-                                                      /*Real=*/false, basis);
+                                                      /*Real=*/false, basis, ctx, dS);
     }
     if (terms.gaussian && N >= 2) {
         result += calculate_Hamiltonian_gaussian_partial(alpha.a1, alpha.a2, alpha.a3, alpha.a4,
-                                                         /*Real=*/false, basis);
+                                                         /*Real=*/false, basis, ctx, dS);
     }
     if (!terms.cosine_terms.empty()) {
         result += calculate_Hamiltonian_general_cosine_partial(
-            alpha.a1, alpha.a2, alpha.a3, alpha.a4, /*Real=*/false, basis, terms.cosine_terms);
+            alpha.a1, alpha.a2, alpha.a3, alpha.a4, /*Real=*/false,
+            basis, terms.cosine_terms, ctx, dS);
     }
 
     return result;
@@ -59,10 +105,11 @@ VectorXcd assemble_grad(const std::vector<AlphaIndex>& alpha_z_list,
                         const HamiltonianTerms& terms) {
     const int d = static_cast<int>(alpha_z_list.size());
     VectorXcd g = VectorXcd::Zero(d);
+    const HamiltonianGradientContext ctx = make_gradient_context(basis, terms);
 
     #pragma omp parallel for schedule(static)
     for (int a = 0; a < d; a++) {
-        g(a) = grad_H_for_alpha(alpha_z_list[a], basis, terms);
+        g(a) = grad_H_for_alpha(alpha_z_list[a], basis, terms, ctx);
     }
     return g;
 }

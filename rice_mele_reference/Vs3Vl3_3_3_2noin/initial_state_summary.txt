@@ -1,0 +1,16 @@
+mode=free/no interaction
+basis=initial_state/Vs3Er_Vl3Er/initial_pathpad_N2_K24.csv
+grid=1024
+cells=16
+a_lat=8.0
+Vs_over_Er=3.0
+Vl_over_Er=3.0
+g_over_Er=0.0
+initial_state_same_as_ecg_basis=yes
+ecg_basis_form=real coefficients, A=0, diagonal real B
+grid_reconstruction=sum_k u_k [g0(x0) g1(x1) + g1(x0) g0(x1)]/sqrt(2)
+norm=1
+x_mean_sum=7.99677203093033
+polarization_cell=0.9995965038662913
+r12_rms=8.045596198763645
+V_gauss_over_Er=0

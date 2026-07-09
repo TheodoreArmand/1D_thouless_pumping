@@ -636,6 +636,9 @@ Cd partial_z_addsn(int alpha_1, bool Real,
                    int alpha_2, int alpha_3, int alpha_4,
                    const PermutationSet& perms) {
     int SN = perms.SN;
+    if (alpha_1 != 1 && alpha_2 != pi.name && alpha_2 != pj.name) {
+        return Cd(0, 0);
+    }
 
     // Compute M_G for all permutations
     std::vector<Cd> M_G(SN);
@@ -670,6 +673,17 @@ Cd partial_z_addsn_second(int alpha_1, int beta_1,
                           int beta_2, int beta_3, int beta_4,
                           const PermutationSet& perms) {
     int SN = perms.SN;
+    const bool alpha_touches = (alpha_2 == pi.name || alpha_2 == pj.name);
+    const bool beta_touches = (beta_2 == pi.name || beta_2 == pj.name);
+    if (alpha_1 == 1 && beta_1 != 1 && !beta_touches) {
+        return Cd(0, 0);
+    }
+    if (alpha_1 != 1 && beta_1 == 1 && !alpha_touches) {
+        return Cd(0, 0);
+    }
+    if (alpha_1 != 1 && beta_1 != 1 && (!alpha_touches || !beta_touches)) {
+        return Cd(0, 0);
+    }
 
     std::vector<Cd> M_G(SN);
     for (int p = 0; p < SN; p++) {

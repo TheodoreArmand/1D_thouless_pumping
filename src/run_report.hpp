@@ -3,6 +3,8 @@
 #include "pumpconfig/pump_config.hpp"
 #include "trace_io.hpp"
 
+#include <cstddef>
+#include <fstream>
 #include <string>
 
 namespace ecg1d {
@@ -37,5 +39,41 @@ void write_run_summary_txt(const std::string& path,
                            const RunSummaryStats& stats,
                            int snapshot_events,
                            int snapshot_rows);
+
+class N1ProgressWriter {
+public:
+    explicit N1ProgressWriter(const std::string& task_dir);
+
+    void write(int step,
+               long long steps_total_est,
+               double total_time,
+               double accepted_dt,
+               double wall_seconds,
+               int param_dim,
+               const Trace& trace,
+               size_t idx);
+
+private:
+    std::ofstream csv_;
+};
+
+class N2ProgressWriter {
+public:
+    explicit N2ProgressWriter(const std::string& task_dir);
+
+    void write(int step,
+               long long steps_total_est,
+               double total_time,
+               double accepted_dt,
+               double wall_seconds,
+               int param_dim,
+               const Trace& trace,
+               size_t idx,
+               double r12_sq,
+               double v_gauss);
+
+private:
+    std::ofstream csv_;
+};
 
 }  // namespace ecg1d
