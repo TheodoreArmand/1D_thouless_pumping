@@ -325,9 +325,8 @@ static DP5StepResult realtime_tdvp_step_dp5(
     result.dz_norm = dz_5.norm();
 
     // Check basis health: reject step if the 5th-order solution produced
-    // NaN/Inf OR absurdly-large finite values (> 1e15). The latter happens
-    // when the adaptive controller overshoots and the basis drifts into
-    // numerically unphysical regions (e.g. Re(A+B) = 1e96 = delta function).
+    // NaN/Inf, absurdly-large finite values (> 1e15), or a non-positive width
+    // matrix. For N > 1 the width condition is lambda_min(Re(A+B)) > 0.
     bool basis_healthy = true;
     const double mag_abort = 1e15;
     auto unhealthy = [&](Cd v) {
@@ -336,10 +335,19 @@ static DP5StepResult realtime_tdvp_step_dp5(
     };
     for (const auto& bp : result.basis_new) {
         if (unhealthy(bp.u)) { basis_healthy = false; break; }
-        for (int a = 0; a < bp.N(); ++a) {
-            if (unhealthy(bp.A(a, a) + bp.B(a, a))) { basis_healthy = false; break; }
-            if (unhealthy(bp.R(a)))                 { basis_healthy = false; break; }
+        const int N = bp.N();
+        for (int a = 0; a < N; ++a) {
+            if (unhealthy(bp.R(a))) { basis_healthy = false; break; }
+            for (int b = 0; b < N; ++b) {
+                if (unhealthy(bp.A(a, b)) || unhealthy(bp.B(a, b))) {
+                    basis_healthy = false;
+                    break;
+                }
+            }
+            if (!basis_healthy) break;
         }
+        const double width_floor = min_real_width_eigenvalue(bp);
+        if (!(std::isfinite(width_floor) && width_floor > 0.0)) basis_healthy = false;
         if (!basis_healthy) break;
     }
 
@@ -605,15 +613,18 @@ RealtimeEvolutionResult realtime_tdvp_evolution(
                 x2_norm = (amp_x2 / S).real();
             }
 
-            // Per-basis min Re(A+B) — if this approaches 0, the Gaussian is
-            // losing normalizability (pathology suspected for step-348 blowup).
-            double min_rab = 1e99;
+            // Per-basis lambda_min(Re(A+B)) — if this approaches 0, the
+            // primitive is losing square integrability.
+            double min_width_lambda = 1e99;
             int    argmin_i = -1;
             double min_reA = 1e99;
             int    argmin_A = -1;
             for (size_t i = 0; i < basis.size(); ++i) {
-                double rab = (basis[i].A(0, 0) + basis[i].B(0, 0)).real();
-                if (rab < min_rab) { min_rab = rab; argmin_i = (int)i; }
+                double width_lambda = min_real_width_eigenvalue(basis[i]);
+                if (width_lambda < min_width_lambda) {
+                    min_width_lambda = width_lambda;
+                    argmin_i = (int)i;
+                }
                 double reA = basis[i].A(0, 0).real();
                 if (reA < min_reA) { min_reA = reA; argmin_A = (int)i; }
             }
@@ -634,7 +645,8 @@ RealtimeEvolutionResult realtime_tdvp_evolution(
                       << " sv_min3=(" << r.sv_small[2] << "," << r.sv_small[1]
                       << "," << r.sv_small[0] << ")"
                       << " |dz|=" << std::setprecision(2) << r.dz_norm
-                      << " min(Re A+B)=" << std::fixed << std::setprecision(4) << min_rab
+                      << " min(lambda_min Re(A+B))=" << std::fixed << std::setprecision(4)
+                      << min_width_lambda
                       << "@" << argmin_i
                       << " min(Re A)=" << min_reA << "@" << argmin_A;
             if (adaptive) std::cout << " rej=" << rejected_count;
@@ -656,6 +668,7 @@ RealtimeEvolutionResult realtime_tdvp_evolution(
                           << "  B=" << basis[i].B(0, 0)
                           << "  R=" << basis[i].R(0)
                           << "  A+B=" << (basis[i].A(0, 0) + basis[i].B(0, 0))
+                          << "  lambda_min_Re(A+B)=" << min_real_width_eigenvalue(basis[i])
                           << "\n";
             }
             result.basis_final = std::move(basis);

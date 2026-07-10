@@ -46,7 +46,10 @@ struct Trace {
 
 struct WidthMonitors {
     double min_re_B = std::numeric_limits<double>::quiet_NaN();
+    // argmin_re_B encodes k*N + particle_index because B is diagonal.
     int argmin_re_B = -1;
+    // For N > 1 this is min_k lambda_min(Re(A_k + B_k)); for N = 1 it
+    // equals the old scalar Re(A+B). argmin_re_AplusB is the primitive index k.
     double min_re_AplusB = std::numeric_limits<double>::quiet_NaN();
     int argmin_re_AplusB = -1;
 };

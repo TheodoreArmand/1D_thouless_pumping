@@ -258,7 +258,8 @@ def plot_health(case_name: str, cfg: dict, ecg_rows: list[dict]) -> str:
     ex = [r["t"] / TOTAL_TIME for r in ecg_rows]
     min_ab = [r["minAB"] if r["minAB"] > 0 else float("nan") for r in ecg_rows]
     resid = [r["resid"] for r in ecg_rows]
-    ln1 = ax.plot(ex, min_ab, color="#334155", lw=1.35, label=r"$\min\mathrm{Re}(A+B)$")
+    ln1 = ax.plot(ex, min_ab, color="#334155", lw=1.35,
+                  label=r"$\lambda_{\min}[\operatorname{Re}(A+B)]$")
     ax.axhline(0.0227284, color="#d97706", lw=0.85, ls="--", label="successful-case min")
     ax.set_yscale("log")
     ax.set_xlim(0.0, 1.0)
@@ -418,7 +419,7 @@ def case_section(item: dict) -> str:
         <div class="{health_class(le)}">
           <b>Current read.</b> ECG is at {pct(le):.1f}% of the cycle, grid is at {pct(lg):.1f}%.
           {diff_status}
-          ECG latest \\(\\min \\mathrm{{Re}}(A+B)={fnum(le['minAB'])}\\), residual {fnum(le['resid'])}.
+          ECG latest \\(\\lambda_{{\\min}}[\\operatorname{{Re}}(A+B)]={fnum(le['minAB'])}\\), residual {fnum(le['resid'])}.
         </div>
         <div class="progpair">
           {progress_bar('ECG progress', pct(le), cfg['color_ecg'])}
@@ -433,7 +434,7 @@ def case_section(item: dict) -> str:
               <tr><th>ECG latest</th><td>step {le['step']}/{TOTAL_STEPS}, t/T={le['t'] / TOTAL_TIME:.3f}, \\(\\Delta P={fnum(le['dP'])}\\)</td></tr>
               <tr><th>grid latest</th><td>step {lg['step']}/{TOTAL_STEPS}, t/T={lg['t'] / TOTAL_TIME:.3f}, \\(\\Delta P={fnum(lg['dP'])}\\)</td></tr>
               <tr><th>ECG latest residual</th><td class="num">{fnum(le['resid'])}</td></tr>
-              <tr><th>ECG latest \\(\\min \\mathrm{{Re}}(A+B)\\)</th><td class="num">{fnum(le['minAB'])}</td></tr>
+              <tr><th>ECG latest \\(\\lambda_{{\\min}}[\\operatorname{{Re}}(A+B)]\\)</th><td class="num">{fnum(le['minAB'])}</td></tr>
               <tr><th>ECG latest rank</th><td class="num">{le['rank']}</td></tr>
               <tr><th>first below successful-case width</th><td>{crossing_text(item['unhealthy'])}</td></tr>
               <tr><th>first below \\(10^{{-3}}\\)</th><td>{crossing_text(item['severe'])}</td></tr>

@@ -31,12 +31,18 @@ pump2::RunOptions make_gaussian_options(const pumpconfig::PumpConfig& cfg) {
     opt.base_terms = ecg1d::HamiltonianTerms::kinetic_only();
     opt.base_terms.gaussian = true;
     opt.evolve_A = true;
+    // Fix diag A = 0 and evolve only A_01: gauge-reduced parameterization
+    // (256 -> 192 at N=2, K=32) from vs3_n2_k32_failure_analysis_report.html.
+    // Set evolve_A_offdiag_only = false after this call to recover full A.
+    opt.evolve_A_offdiag_only = true;
     opt.config_appendix =
         "driver=main_2gaussian\n"
         "hamiltonian_kinetic=1\n"
         "hamiltonian_delta=0\n"
         "hamiltonian_gaussian=1\n"
-        "tdvp_evolve_A=1\n";
+        "tdvp_evolve_A=1\n"
+        "tdvp_evolve_A_offdiag_only=1\n"
+        "tdvp_A_diag_frozen_zero=1\n";
 
     std::ostringstream oss;
     oss << "g_gauss_code=" << ecg1d::g_gauss << "\n"

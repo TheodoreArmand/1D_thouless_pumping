@@ -296,7 +296,8 @@ void write_basis_csv(const std::string& path, const std::vector<BasisParams>& ba
     }
 }
 
-std::vector<ecg1d::AlphaIndex> make_alpha_list(int N, int K, bool evolve_A) {
+std::vector<ecg1d::AlphaIndex> make_alpha_list(int N, int K, bool evolve_A,
+                                               bool evolve_A_offdiag_only) {
     std::vector<ecg1d::AlphaIndex> alpha;
     for (int i = 0; i < K; ++i) alpha.push_back({1, i, 0, 0});
     for (int i = 0; i < K; ++i)
@@ -304,9 +305,15 @@ std::vector<ecg1d::AlphaIndex> make_alpha_list(int N, int K, bool evolve_A) {
     for (int i = 0; i < K; ++i)
         for (int j = 0; j < N; ++j) alpha.push_back({3, i, j, 0});
     if (evolve_A) {
+        // Full A evolves the whole upper triangle (n from m). The
+        // off-diagonal-only mode starts at m+1, freezing diag A (kept at 0 by
+        // run_pump) and evolving just A_01 for N=2 — the gauge-reduced
+        // parameterization from the failure analysis (256 -> 192 at N=2, K=32).
         for (int i = 0; i < K; ++i)
-            for (int m = 0; m < N; ++m)
-                for (int n = m; n < N; ++n) alpha.push_back({4, i, m, n});
+            for (int m = 0; m < N; ++m) {
+                const int n_start = evolve_A_offdiag_only ? m + 1 : m;
+                for (int n = n_start; n < N; ++n) alpha.push_back({4, i, m, n});
+            }
     }
     return alpha;
 }
@@ -319,6 +326,15 @@ int run_pump(PumpConfig& cfg, const RunOptions& opt) {
         std::vector<BasisParams> basis = load_basis_csv(cfg.basis_from, cfg.N);
         if (static_cast<int>(basis.size()) != cfg.K) {
             throw std::runtime_error("basis CSV size does not match locked K");
+        }
+        if (opt.evolve_A_offdiag_only) {
+            // "Fix diag A = 0": the off-diagonal-only parameterization spans
+            // the full symmetric-W family through diagonal B, so pin diag A to
+            // zero here and let make_alpha_list keep it frozen there. No-op for
+            // the path-pad basis, which already ships with A = 0. Done before
+            // normalize so any nonzero seed is accounted for in the norm.
+            for (auto& b : basis)
+                for (int a = 0; a < cfg.N; ++a) b.A(a, a) = Cd(0.0, 0.0);
         }
         normalize_basis(basis);
 
@@ -338,7 +354,8 @@ int run_pump(PumpConfig& cfg, const RunOptions& opt) {
         solver_cfg.lambda_C = cfg.lambda_C;
         solver_cfg.rcond = cfg.rcond;
 
-        std::vector<ecg1d::AlphaIndex> alpha = make_alpha_list(cfg.N, cfg.K, opt.evolve_A);
+        std::vector<ecg1d::AlphaIndex> alpha =
+            make_alpha_list(cfg.N, cfg.K, opt.evolve_A, opt.evolve_A_offdiag_only);
         const int param_dim = static_cast<int>(alpha.size());
         const long long steps_total_est = ecg1d::estimate_time_steps(cfg);
         if (param_dim == 0) throw std::runtime_error("TDVP parameter list is empty");
@@ -550,7 +567,7 @@ int run_pump(PumpConfig& cfg, const RunOptions& opt) {
                       << "max raw residual        = " << max_relative_raw_residual << "\n"
                       << "max discarded rhs frac  = " << max_discarded_rhs_fraction << "\n"
                       << "min Re(B)   over run    = " << min_re_B_run << "\n"
-                      << "min Re(A+B) over run    = " << min_re_AplusB_run << "\n"
+                      << "min eig Re(A+B) over run = " << min_re_AplusB_run << "\n"
                       << "norm drift (rel)        = " << norm_drift_rel << "\n"
                       << "energy drift (rel)      = " << energy_drift_rel << "\n"
                       << "x2 growth ratio         = " << x2_growth_ratio << "\n"

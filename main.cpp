@@ -450,7 +450,7 @@ int main() {
                       << "max raw residual        = " << max_relative_raw_residual << "\n"
                       << "max discarded rhs frac  = " << max_discarded_rhs_fraction << "\n"
                       << "min Re(B)   over run    = " << min_re_B_run << "\n"
-                      << "min Re(A+B) over run    = " << min_re_AplusB_run << "\n"
+                      << "min eig Re(A+B) over run = " << min_re_AplusB_run << "\n"
                       << "norm drift (rel)        = " << norm_drift_rel << "\n"
                       << "energy drift (rel)      = " << energy_drift_rel << "\n"
                       << "x2 growth ratio         = " << x2_growth_ratio << "\n"

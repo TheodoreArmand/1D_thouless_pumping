@@ -475,7 +475,7 @@ def plot_health(case: dict, ecg: list[dict]) -> str:
     x = phase_values(ecg)
     min_ab = [r["minAB"] if r["minAB"] > 0 else float("nan") for r in ecg]
     resid = [r["resid"] if r["resid"] > 0 else float("nan") for r in ecg]
-    ln1 = ax.plot(x, min_ab, color="#334155", lw=1.05, label="min Re(A+B)")
+    ln1 = ax.plot(x, min_ab, color="#334155", lw=1.05, label="lambda_min Re(A+B)")
     ax.axhline(SUCCESS_WIDTH_FLOOR, color="#d97706", lw=0.75, ls="--")
     ax.axhline(1e-3, color="#dc2626", lw=0.65, ls=":")
     ax.set_yscale("log")
@@ -580,7 +580,7 @@ def case_section(item: dict) -> str:
           <p>{compare}</p>
         </div>
         <div class="{status_class}">
-          min Re(A+B)={fnum(minab)}<br>
+          \\( \\lambda_{{\\min}}[\\operatorname{{Re}}(A+B)] \\)={fnum(minab)}<br>
           res={fnum(resid)}
         </div>
       </div>
@@ -637,6 +637,13 @@ def write_report() -> Path:
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{REPORT_TITLE}</title>
+  <script>
+  window.MathJax = {{
+    tex: {{ inlineMath: [['\\\\(', '\\\\)']], displayMath: [['\\\\[', '\\\\]']] }},
+    svg: {{ fontCache: 'global' }}
+  }};
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
   <style>
     body {{
       font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -770,7 +777,7 @@ def write_report() -> Path:
       <th>grid ETA</th>
       <th>matched phase/pi</th>
       <th>ECG-grid Delta P</th>
-      <th>min Re(A+B)</th>
+      <th>\\(\\lambda_{{\\min}}[\\operatorname{{Re}}(A+B)]\\)</th>
       <th>res</th>
     </tr>
     {summary_rows(items)}

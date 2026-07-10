@@ -33,6 +33,13 @@ struct RunOptions {
     // Kept off by default so the free/no-interaction driver preserves the
     // current frozen-A behavior.
     bool evolve_A = false;
+    // When evolve_A is set, restrict A to its strict off-diagonal entries
+    // (A_01 for N=2) and freeze diag A at 0 (run_pump pins it before the
+    // evolution). Diagonal B + R + u already span any symmetric quadratic form
+    // W = A + B, so this is the SAME primitive function family without the
+    // exact gauge redundancy of full A (param_dim 256 -> 192 at N=2, K=32).
+    // See vs3_n2_k32_failure_analysis_report.html section 5 / experiment E2.
+    bool evolve_A_offdiag_only = false;
     // Extra "key=value\n" lines appended to config.txt after write_config_txt
     // (keeps run_report untouched and the N=1 config.txt byte-stable).
     std::string config_appendix;
@@ -46,9 +53,12 @@ double phi_at(double t, const pumpconfig::PumpConfig& cfg);
 std::vector<ecg1d::BasisParams> load_basis_csv(const std::string& path, int N);
 void write_basis_csv(const std::string& path, const std::vector<ecg1d::BasisParams>& basis);
 
-// TDVP parameter list: u (K), B diagonal (K*N), R (K*N), optionally A upper
-// triangle (K*N*(N+1)/2).
-std::vector<ecg1d::AlphaIndex> make_alpha_list(int N, int K, bool evolve_A = false);
+// TDVP parameter list: u (K), B diagonal (K*N), R (K*N), optionally A entries.
+// With evolve_A the A block is the upper triangle including the diagonal
+// (K*N*(N+1)/2); with evolve_A_offdiag_only it is the strict upper triangle
+// only (K*N*(N-1)/2), freezing diag A.
+std::vector<ecg1d::AlphaIndex> make_alpha_list(int N, int K, bool evolve_A = false,
+                                               bool evolve_A_offdiag_only = false);
 
 // Full pump run: load basis, evolve, write trace/snapshots/summary (and
 // n2_trace.csv with pair-separation / <V_int> when N >= 2).

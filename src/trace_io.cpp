@@ -14,9 +14,9 @@
 namespace ecg1d {
 
 WidthMonitors compute_width_monitors(const std::vector<BasisParams>& basis) {
-    // Min over basis functions k AND particles a of the diagonal widths.
-    // argmin encodes both as k*N + a (equals k for N = 1, so the N = 1
-    // trace output is unchanged).
+    // B is diagonal in the current parameterization, so min Re(B) is still a
+    // diagonal scan. For A+B the normalizability condition is instead
+    // lambda_min(Re(A+B)); using only diagonal entries misses N > 1 failures.
     WidthMonitors w;
     double best_b = std::numeric_limits<double>::infinity();
     double best_ab = std::numeric_limits<double>::infinity();
@@ -24,17 +24,22 @@ WidthMonitors compute_width_monitors(const std::vector<BasisParams>& basis) {
         const int N = basis[k].N();
         for (int a = 0; a < N; ++a) {
             const double reB = basis[k].B(a, a).real();
-            const double reAB = (basis[k].A(a, a) + basis[k].B(a, a)).real();
             if (reB < best_b) {
                 best_b = reB;
                 w.min_re_B = reB;
                 w.argmin_re_B = k * N + a;
             }
-            if (reAB < best_ab) {
-                best_ab = reAB;
-                w.min_re_AplusB = reAB;
-                w.argmin_re_AplusB = k * N + a;
-            }
+        }
+        const double lambda_min_ab = min_real_width_eigenvalue(basis[k]);
+        if (!std::isfinite(lambda_min_ab)) {
+            w.min_re_AplusB = lambda_min_ab;
+            w.argmin_re_AplusB = k;
+            return w;
+        }
+        if (lambda_min_ab < best_ab) {
+            best_ab = lambda_min_ab;
+            w.min_re_AplusB = lambda_min_ab;
+            w.argmin_re_AplusB = k;
         }
     }
     return w;

@@ -19,4 +19,8 @@ struct BasisParams {
                                    const VectorXcd& R, int name = 0);
 };
 
+// Normalizability monitor for one primitive. For N > 1 the width condition is
+// positive definiteness of Re(A + B), not just positivity of its diagonal.
+double min_real_width_eigenvalue(const BasisParams& basis);
+
 } // namespace ecg1d

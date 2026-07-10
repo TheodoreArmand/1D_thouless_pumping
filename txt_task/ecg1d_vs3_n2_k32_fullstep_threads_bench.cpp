@@ -59,15 +59,18 @@ int run_bench(const std::string& mode, int steps, double s0) {
 
     ecg1d::HamiltonianTerms base_terms = ecg1d::HamiltonianTerms::kinetic_only();
     bool evolve_A = false;
+    bool evolve_A_offdiag_only = false;
     if (mode == "gauss") {
         pump2::RunOptions opt = pump2gaussian::make_gaussian_options(cfg);
         base_terms = opt.base_terms;
         evolve_A = opt.evolve_A;
+        evolve_A_offdiag_only = opt.evolve_A_offdiag_only;
     } else if (mode != "free") {
         throw std::runtime_error("mode must be free or gauss");
     }
 
-    std::vector<ecg1d::AlphaIndex> alpha = pump2::make_alpha_list(cfg.N, cfg.K, evolve_A);
+    std::vector<ecg1d::AlphaIndex> alpha =
+        pump2::make_alpha_list(cfg.N, cfg.K, evolve_A, evolve_A_offdiag_only);
     ecg1d::SolverConfig solver_cfg;
     solver_cfg.lambda_C = cfg.lambda_C;
     solver_cfg.rcond = cfg.rcond;

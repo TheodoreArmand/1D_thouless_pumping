@@ -265,9 +265,10 @@ void write_run_summary_txt(const std::string& path,
       << "final_sv_small_2=" << stats.final_sv_small[2] << "\n"
       << "max_relative_raw_residual=" << stats.max_relative_raw_residual << "\n"
       << "max_discarded_rhs_fraction=" << stats.max_discarded_rhs_fraction << "\n"
+      << "width_monitor_AplusB=min_lambda_Re_AplusB\n"
       << "min_re_B_run=" << stats.min_re_B_run << "\n"
       << "min_re_B_final=" << trace.min_re_B.back()
-      << " @gaussian " << trace.argmin_re_B.back() << "\n"
+      << " @kN_plus_particle " << trace.argmin_re_B.back() << "\n"
       << "min_re_AplusB_run=" << stats.min_re_AplusB_run << "\n"
       << "min_re_AplusB_final=" << trace.min_re_AplusB.back()
       << " @gaussian " << trace.argmin_re_AplusB.back() << "\n"
