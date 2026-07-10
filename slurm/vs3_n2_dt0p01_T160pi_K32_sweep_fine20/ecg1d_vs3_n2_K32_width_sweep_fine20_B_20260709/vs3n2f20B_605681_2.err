@@ -1,4 +1,0 @@
-slurmstepd: error: *** STEP 605686.0 ON gyro CANCELLED AT 2026-07-09T22:02:15 ***
-slurmstepd: error: *** JOB 605686 ON gyro CANCELLED AT 2026-07-09T22:02:15 ***
-srun: error: gyro: task 0: Terminated
-srun: Force Terminated StepId=605686.0

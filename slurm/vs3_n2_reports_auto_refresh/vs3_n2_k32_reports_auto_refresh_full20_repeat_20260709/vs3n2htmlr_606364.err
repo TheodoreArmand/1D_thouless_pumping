@@ -1,5 +1,0 @@
-/tmp/matplotlib-cache is not a writable directory
-Matplotlib created a temporary cache directory at /tmp/matplotlib-vwgpzm30 because there was an issue with the default path (/tmp/matplotlib-cache); it is highly recommended to set the MPLCONFIGDIR environment variable to a writable directory, in particular to speed up the import of Matplotlib and to better support multiprocessing.
-srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
-slurmstepd: error: *** STEP 606364.0 ON bar CANCELLED AT 2026-07-09T22:56:57 ***
-slurmstepd: error: *** JOB 606364 ON bar CANCELLED AT 2026-07-09T22:56:57 ***

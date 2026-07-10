@@ -1,2 +1,0 @@
-FATAL: nonfinite basis after TDVP RK4 at step 41910 t=218.026
-srun: error: doom: task 0: Exited with exit code 2

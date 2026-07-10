@@ -1,3 +1,0 @@
-srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
-slurmstepd: error: *** STEP 606009.0 ON fov CANCELLED AT 2026-07-09T21:00:51 ***
-slurmstepd: error: *** JOB 606009 ON fov CANCELLED AT 2026-07-09T21:00:51 ***
