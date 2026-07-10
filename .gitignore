@@ -2,6 +2,7 @@
 /out/
 /slurm/
 /.ipynb_checkpoints/
+/html/.ipynb_checkpoints/
 
 *.o
 *.o.d
