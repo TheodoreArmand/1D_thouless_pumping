@@ -40,6 +40,10 @@ struct PumpConfig {
 
     // Phase schedule CSV with columns s=t/T and phi(s).
     std::string phase_schedule_csv;
+    // Human-readable convention recorded in config.txt/summary.txt.
+    std::string phase_schedule_convention;
+    // Optional suffix that separates output produced by incompatible protocols.
+    std::string output_protocol_tag;
     std::vector<double> phase_s;
     std::vector<double> phase_phi;
 

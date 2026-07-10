@@ -271,6 +271,52 @@ endif()
 target_compile_definitions(ecg1d_vs3_n2_dt001_fine20_comdiag_rcond PRIVATE EIGEN_DONT_PARALLELIZE)
 target_compile_options(ecg1d_vs3_n2_dt001_fine20_comdiag_rcond PRIVATE -O2 -march=x86-64-v3)
 
+add_executable(ecg1d_vs3_n2_gate1_shortwin
+    txt_task/ecg1d_vs3_n2_gate1_shortwin.cpp
+    2gaussian_src/gaussian_terms.cpp
+    ${PUMP2_SRC}
+    ${PUMPCONFIG_SRC}
+    ${ECG_SRC}
+)
+
+target_include_directories(ecg1d_vs3_n2_gate1_shortwin PRIVATE
+    ${PROJECT_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/src
+)
+
+if(Eigen3_FOUND)
+    target_link_libraries(ecg1d_vs3_n2_gate1_shortwin PRIVATE Eigen3::Eigen OpenMP::OpenMP_CXX)
+else()
+    target_include_directories(ecg1d_vs3_n2_gate1_shortwin PRIVATE ${EIGEN3_INCLUDE_DIR})
+    target_link_libraries(ecg1d_vs3_n2_gate1_shortwin PRIVATE OpenMP::OpenMP_CXX)
+endif()
+
+target_compile_definitions(ecg1d_vs3_n2_gate1_shortwin PRIVATE EIGEN_DONT_PARALLELIZE)
+target_compile_options(ecg1d_vs3_n2_gate1_shortwin PRIVATE -O2 -march=x86-64-v3)
+
+add_executable(ecg1d_vs3_n2_gate1_shortwin_k48
+    txt_task/ecg1d_vs3_n2_gate1_shortwin_k48.cpp
+    2gaussian_src/gaussian_terms.cpp
+    ${PUMP2_SRC}
+    ${PUMPCONFIG_SRC}
+    ${ECG_SRC}
+)
+
+target_include_directories(ecg1d_vs3_n2_gate1_shortwin_k48 PRIVATE
+    ${PROJECT_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/src
+)
+
+if(Eigen3_FOUND)
+    target_link_libraries(ecg1d_vs3_n2_gate1_shortwin_k48 PRIVATE Eigen3::Eigen OpenMP::OpenMP_CXX)
+else()
+    target_include_directories(ecg1d_vs3_n2_gate1_shortwin_k48 PRIVATE ${EIGEN3_INCLUDE_DIR})
+    target_link_libraries(ecg1d_vs3_n2_gate1_shortwin_k48 PRIVATE OpenMP::OpenMP_CXX)
+endif()
+
+target_compile_definitions(ecg1d_vs3_n2_gate1_shortwin_k48 PRIVATE EIGEN_DONT_PARALLELIZE)
+target_compile_options(ecg1d_vs3_n2_gate1_shortwin_k48 PRIVATE -O2 -march=x86-64-v3)
+
 add_executable(ecg1d_vs3_n2_dt001_staged_full
     txt_task/ecg1d_vs3_n2_dt001_staged_full.cpp
     2gaussian_src/gaussian_terms.cpp

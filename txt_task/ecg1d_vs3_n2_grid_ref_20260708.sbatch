@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
 #
 # Submit:
-#   sbatch --parsable /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/txt_task/ecg1d_vs3_n2_grid_ref_20260708.sbatch | tee /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/slurm/vs3_n2_dt0p01_T160pi/grid_ref/ecg1d_vs3_n2_grid_ref_20260708/ecg1d_vs3_n2_grid_ref_20260708.jobid
+#   sbatch --parsable /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/txt_task/ecg1d_vs3_n2_grid_ref_20260708.sbatch | tee /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/slurm/vs3_n2_dt0p01_T160pi_full_depth_schedule/grid_ref/ecg1d_vs3_n2_grid_ref_20260708/ecg1d_vs3_n2_grid_ref_20260708.jobid
 #
 # Monitor:
 #   squeue -u zexuan
-#   squeue -j "$(cat /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/slurm/vs3_n2_dt0p01_T160pi/grid_ref/ecg1d_vs3_n2_grid_ref_20260708/ecg1d_vs3_n2_grid_ref_20260708.jobid)"
-#   tail -f /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/slurm/vs3_n2_dt0p01_T160pi/grid_ref/ecg1d_vs3_n2_grid_ref_20260708/vs3n2grid_$(cat /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/slurm/vs3_n2_dt0p01_T160pi/grid_ref/ecg1d_vs3_n2_grid_ref_20260708/ecg1d_vs3_n2_grid_ref_20260708.jobid)_0.out
-#   tail -f /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/slurm/vs3_n2_dt0p01_T160pi/grid_ref/ecg1d_vs3_n2_grid_ref_20260708/vs3n2grid_$(cat /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/slurm/vs3_n2_dt0p01_T160pi/grid_ref/ecg1d_vs3_n2_grid_ref_20260708/ecg1d_vs3_n2_grid_ref_20260708.jobid)_1.out
+#   squeue -j "$(cat /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/slurm/vs3_n2_dt0p01_T160pi_full_depth_schedule/grid_ref/ecg1d_vs3_n2_grid_ref_20260708/ecg1d_vs3_n2_grid_ref_20260708.jobid)"
+#   tail -f /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/slurm/vs3_n2_dt0p01_T160pi_full_depth_schedule/grid_ref/ecg1d_vs3_n2_grid_ref_20260708/vs3n2grid_$(cat /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/slurm/vs3_n2_dt0p01_T160pi_full_depth_schedule/grid_ref/ecg1d_vs3_n2_grid_ref_20260708/ecg1d_vs3_n2_grid_ref_20260708.jobid)_0.out
+#   tail -f /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/slurm/vs3_n2_dt0p01_T160pi_full_depth_schedule/grid_ref/ecg1d_vs3_n2_grid_ref_20260708/vs3n2grid_$(cat /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/slurm/vs3_n2_dt0p01_T160pi_full_depth_schedule/grid_ref/ecg1d_vs3_n2_grid_ref_20260708/ecg1d_vs3_n2_grid_ref_20260708.jobid)_1.out
 #
 # After completion:
-#   sacct -j "$(cat /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/slurm/vs3_n2_dt0p01_T160pi/grid_ref/ecg1d_vs3_n2_grid_ref_20260708/ecg1d_vs3_n2_grid_ref_20260708.jobid)" --format=JobID,JobName,Partition,State,Elapsed,AllocCPUS,ReqMem,MaxRSS,ExitCode
+#   sacct -j "$(cat /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/slurm/vs3_n2_dt0p01_T160pi_full_depth_schedule/grid_ref/ecg1d_vs3_n2_grid_ref_20260708/ecg1d_vs3_n2_grid_ref_20260708.jobid)" --format=JobID,JobName,Partition,State,Elapsed,AllocCPUS,ReqMem,MaxRSS,ExitCode
 #
 # Cancel:
-#   scancel "$(cat /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/slurm/vs3_n2_dt0p01_T160pi/grid_ref/ecg1d_vs3_n2_grid_ref_20260708/ecg1d_vs3_n2_grid_ref_20260708.jobid)"
+#   scancel "$(cat /home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping/slurm/vs3_n2_dt0p01_T160pi_full_depth_schedule/grid_ref/ecg1d_vs3_n2_grid_ref_20260708/ecg1d_vs3_n2_grid_ref_20260708.jobid)"
 
 #SBATCH --job-name=vs3n2grid
 #SBATCH --account=gyqyan
@@ -25,12 +25,12 @@
 #SBATCH --time=08:00:00
 #SBATCH --array=0-1
 #SBATCH --chdir=/home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping
-#SBATCH --output=slurm/vs3_n2_dt0p01_T160pi/grid_ref/ecg1d_vs3_n2_grid_ref_20260708/%x_%A_%a.out
-#SBATCH --error=slurm/vs3_n2_dt0p01_T160pi/grid_ref/ecg1d_vs3_n2_grid_ref_20260708/%x_%A_%a.err
+#SBATCH --output=slurm/vs3_n2_dt0p01_T160pi_full_depth_schedule/grid_ref/ecg1d_vs3_n2_grid_ref_20260708/%x_%A_%a.out
+#SBATCH --error=slurm/vs3_n2_dt0p01_T160pi_full_depth_schedule/grid_ref/ecg1d_vs3_n2_grid_ref_20260708/%x_%A_%a.err
 
 set -euo pipefail
 
-mkdir -p slurm/vs3_n2_dt0p01_T160pi/grid_ref/ecg1d_vs3_n2_grid_ref_20260708
+mkdir -p slurm/vs3_n2_dt0p01_T160pi_full_depth_schedule/grid_ref/ecg1d_vs3_n2_grid_ref_20260708
 
 case "${SLURM_ARRAY_TASK_ID}" in
   0)
@@ -47,7 +47,7 @@ case "${SLURM_ARRAY_TASK_ID}" in
     ;;
 esac
 
-out_dir="out/vs3_n2_dt0p01_T160pi/grid_ref/${mode}/g1024_dt0p01_T160pi"
+out_dir="out/vs3_n2_dt0p01_T160pi_full_depth_schedule/grid_ref/${mode}/g1024_dt0p01_T160pi"
 mkdir -p "${out_dir}"
 
 echo "job_id=${SLURM_JOB_ID}"
@@ -79,7 +79,7 @@ export OMP_PLACES=cores
 
 srun python3 rice_mele_reference/lohes_experience/n2_grid_reference.py \
   --basis initial_state/Vs3Er_Vl3Er/initial_pathpad_N2_K24.csv \
-  --schedule rice_mele_reference/Vs3Vl3_3_3/gap_adaptive_vs3vl3_maincpp_schedule.csv \
+  --schedule rice_mele_reference/Vs3Vl3_3_3/gap_adaptive_vs3vl3_full_depth_schedule.csv \
   --grid 1024 \
   --cells 16 \
   --a-lat 8.0 \

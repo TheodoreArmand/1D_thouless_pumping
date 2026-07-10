@@ -19,6 +19,7 @@
 #include <iomanip>
 #include <iostream>
 #include <limits>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <utility>
@@ -190,6 +191,137 @@ void write_n2_diagnostics(const std::string& path, const N2Diagnostics& diag) {
     }
 }
 
+// ---- R3a occupancy gate helpers -------------------------------------------
+// See vs3_n2_k32_success_roadmap_report.html section 6-R3 / 8.2.
+
+// Occupancy tier of a term from |u_k| and the hysteresis band edges:
+//   0 = core   (|u| >= u_on)
+//   1 = waking (u_off <= |u| < u_on)
+//   2 = parked (|u| < u_off)
+inline int occupancy_tier(double abs_u, double u_on, double u_off) {
+    if (abs_u >= u_on) return 0;
+    if (abs_u >= u_off) return 1;
+    return 2;
+}
+
+// Update per-term active flags with hysteresis: wake above u_on, re-park below
+// u_off, hold state inside the band. Only |u_k| matters (the metric ill-scaling
+// is set by the term amplitude).
+void update_active_hysteresis(const std::vector<BasisParams>& basis,
+                              double u_on, double u_off,
+                              std::vector<char>& term_active) {
+    const int K = static_cast<int>(basis.size());
+    for (int k = 0; k < K; ++k) {
+        const double au = std::abs(basis[k].u);
+        if (au > u_on) term_active[k] = 1;
+        else if (au < u_off) term_active[k] = 0;
+        // else: keep previous state (hysteresis band)
+    }
+}
+
+// Build the evolution parameter list with the occupancy gate applied: every u
+// entry, but a term's B/R/A entries only when term_active[k]. Mirrors the block
+// order and A-flag logic of make_alpha_list so index semantics are identical.
+std::vector<ecg1d::AlphaIndex> build_gated_alpha_list(
+        int N, int K, bool evolve_A, bool evolve_A_offdiag_only,
+        const std::vector<char>& term_active) {
+    std::vector<ecg1d::AlphaIndex> alpha;
+    for (int i = 0; i < K; ++i) alpha.push_back({1, i, 0, 0});
+    for (int i = 0; i < K; ++i)
+        if (term_active[i])
+            for (int j = 0; j < N; ++j) alpha.push_back({2, i, j, 0});
+    for (int i = 0; i < K; ++i)
+        if (term_active[i])
+            for (int j = 0; j < N; ++j) alpha.push_back({3, i, j, 0});
+    if (evolve_A) {
+        for (int i = 0; i < K; ++i) {
+            if (!term_active[i]) continue;
+            for (int m = 0; m < N; ++m) {
+                const int n_start = evolve_A_offdiag_only ? m + 1 : m;
+                for (int n = n_start; n < N; ++n) alpha.push_back({4, i, m, n});
+            }
+        }
+    }
+    return alpha;
+}
+
+// Group id per alpha entry = block(u/B/R/A = 0..3) * 3 + tier(core/waking/parked
+// = 0..2), classified from the owning term's |u_k|. n_groups = 12. Feeds the
+// discarded-RHS decomposition in realtime_tdvp.
+ecg1d::RhsGrouping build_param_grouping(
+        const std::vector<ecg1d::AlphaIndex>& alpha,
+        const std::vector<BasisParams>& basis,
+        double u_on, double u_off) {
+    ecg1d::RhsGrouping g;
+    g.n_groups = 12;
+    g.group_of_param.resize(alpha.size());
+    for (size_t p = 0; p < alpha.size(); ++p) {
+        const auto& a = alpha[p];
+        const int block = a.a1 - 1;  // 1:u,2:B,3:R,4:A -> 0..3
+        const int tier = occupancy_tier(std::abs(basis[a.a2].u), u_on, u_off);
+        g.group_of_param[p] = block * 3 + tier;
+    }
+    return g;
+}
+
+struct OccupancyCensus { int n_core = 0, n_waking = 0, n_parked = 0; };
+
+OccupancyCensus occupancy_census(const std::vector<BasisParams>& basis,
+                                 double u_on, double u_off) {
+    OccupancyCensus c;
+    for (const auto& b : basis) {
+        switch (occupancy_tier(std::abs(b.u), u_on, u_off)) {
+            case 0: c.n_core++; break;
+            case 1: c.n_waking++; break;
+            default: c.n_parked++; break;
+        }
+    }
+    return c;
+}
+
+// occupancy_gate.csv: per-sampled-step census, the global discarded-RHS fraction
+// (self-contained, == the trace's discarded_rhs_fraction), and each (block x
+// tier) cell's SHARE of the total discarded mass (the 12 shares sum to 1). The
+// share form is bounded [0,1] and directly answers the H1 question "which block
+// x tier owns the truncated gradient". Column order matches group id = block*3 +
+// tier (block u/B/R/A = 0..3, tier core/waking/parked = 0..2).
+struct OccupancyGateWriter {
+    std::ofstream f;
+    explicit OccupancyGateWriter(const std::string& path) : f(path) {
+        if (!f.is_open()) throw std::runtime_error("cannot open " + path);
+        f << "step,t,phi,active_param_dim,n_core,n_waking,n_parked,disc_frac_global,"
+             "share_u_core,share_u_waking,share_u_parked,"
+             "share_B_core,share_B_waking,share_B_parked,"
+             "share_R_core,share_R_waking,share_R_parked,"
+             "share_A_core,share_A_waking,share_A_parked\n";
+        f << std::setprecision(10);
+        f.flush();  // header visible immediately for live monitoring
+    }
+    void write_row(int step, double t, double phi, int active_dim,
+                   const OccupancyCensus& c,
+                   const std::vector<double>& disc_sq,
+                   const std::vector<double>& total_sq) {
+        double sum_disc = 0.0, sum_total = 0.0;
+        const int ng = std::min<int>(12, static_cast<int>(disc_sq.size()));
+        for (int g = 0; g < ng; ++g) {
+            sum_disc += disc_sq[g];
+            if (g < static_cast<int>(total_sq.size())) sum_total += total_sq[g];
+        }
+        const double gfrac = (sum_total > 0.0) ? std::sqrt(sum_disc / sum_total) : 0.0;
+        f << step << "," << t << "," << phi << "," << active_dim << ","
+          << c.n_core << "," << c.n_waking << "," << c.n_parked << "," << gfrac;
+        for (int g = 0; g < 12; ++g) {
+            double share = 0.0;
+            if (sum_disc > 0.0 && g < static_cast<int>(disc_sq.size())) {
+                share = disc_sq[g] / sum_disc;
+            }
+            f << "," << share;
+        }
+        f << "\n";
+        f.flush();  // keep occupancy_gate.csv readable by the live report each sample
+    }
+};
+
 }  // namespace
 
 void load_phase_schedule(PumpConfig& cfg) {
@@ -343,6 +475,9 @@ int run_pump(PumpConfig& cfg, const RunOptions& opt) {
                              + "_tmax" + ecg1d::format_output_tag(cfg.total_time);
         task_dir += "_VsER" + ecg1d::format_output_tag(cfg.Vs / cfg.recoil_energy)
                   + "_VlER" + ecg1d::format_output_tag(cfg.Vl / cfg.recoil_energy);
+        if (!cfg.output_protocol_tag.empty()) {
+            task_dir += "_" + cfg.output_protocol_tag;
+        }
         std::filesystem::create_directories(task_dir);
 
         const std::string config_path = task_dir + "/config.txt";
@@ -359,6 +494,27 @@ int run_pump(PumpConfig& cfg, const RunOptions& opt) {
         const int param_dim = static_cast<int>(alpha.size());
         const long long steps_total_est = ecg1d::estimate_time_steps(cfg);
         if (param_dim == 0) throw std::runtime_error("TDVP parameter list is empty");
+
+        // R3a occupancy gate state. term_active[k] tracks whether term k's B/R/A
+        // coordinates are currently in the evolution parameter list (hysteresis).
+        // Initialized from |u_k(0)| >= u_on so core terms start active and
+        // low-amplitude reserve pads start parked. Unused when the gate is off.
+        std::vector<char> term_active(cfg.K, 1);
+        if (opt.occupancy_gate_enabled) {
+            for (int k = 0; k < cfg.K; ++k) {
+                term_active[k] =
+                    (std::abs(basis[k].u) >= opt.occupancy_u_on) ? 1 : 0;
+            }
+        }
+        std::unique_ptr<OccupancyGateWriter> occ_writer;
+        if (opt.occupancy_diag_enabled) {
+            occ_writer =
+                std::make_unique<OccupancyGateWriter>(task_dir + "/occupancy_gate.csv");
+        }
+        // Observed active-dimension span. Seeded lazily from the first step so a
+        // gated run reports its true range (not the nominal full dim).
+        int min_active_param_dim = -1;
+        int max_active_param_dim = -1;
 
         std::cout << "config=" << cfg.config_name
                   << " lambda_C=" << std::scientific << std::setprecision(2) << cfg.lambda_C
@@ -429,8 +585,39 @@ int run_pump(PumpConfig& cfg, const RunOptions& opt) {
                 return hamiltonian_at(stage_t, cfg, opt);
             };
 
+            // R3a: pick the parameter list for this step. With the gate on,
+            // refresh the per-term hysteresis from the current |u_k| and rebuild
+            // the list (u always in; B/R/A only for active terms). Held fixed
+            // across the 4 RK4 sub-stages. Off: the static full list.
+            std::vector<ecg1d::AlphaIndex> gated_alpha;
+            const std::vector<ecg1d::AlphaIndex>* alpha_step = &alpha;
+            if (opt.occupancy_gate_enabled) {
+                update_active_hysteresis(basis, opt.occupancy_u_on,
+                                         opt.occupancy_u_off, term_active);
+                gated_alpha = build_gated_alpha_list(
+                    cfg.N, cfg.K, opt.evolve_A, opt.evolve_A_offdiag_only,
+                    term_active);
+                alpha_step = &gated_alpha;
+            }
+            const int active_param_dim = static_cast<int>(alpha_step->size());
+            if (min_active_param_dim < 0) {
+                min_active_param_dim = max_active_param_dim = active_param_dim;
+            } else {
+                min_active_param_dim = std::min(min_active_param_dim, active_param_dim);
+                max_active_param_dim = std::max(max_active_param_dim, active_param_dim);
+            }
+
+            ecg1d::RhsGrouping grouping;
+            const ecg1d::RhsGrouping* grouping_ptr = nullptr;
+            if (opt.occupancy_diag_enabled) {
+                grouping = build_param_grouping(*alpha_step, basis,
+                                                opt.occupancy_u_on,
+                                                opt.occupancy_u_off);
+                grouping_ptr = &grouping;
+            }
+
             ecg1d::RealtimeStepResult r = ecg1d::realtime_tdvp_step_rk4_time_dependent(
-                alpha, basis, t, dt_step, terms_at_stage, solver_cfg);
+                *alpha_step, basis, t, dt_step, terms_at_stage, solver_cfg, grouping_ptr);
             basis = std::move(r.basis);
             ensure_finite_basis("after TDVP RK4", step + 1, t + dt_step);
 
@@ -488,6 +675,13 @@ int run_pump(PumpConfig& cfg, const RunOptions& opt) {
                     progress_wall_seconds, param_dim, trace, idx,
                     n2_diag.r12_sq.empty() ? dnan : n2_diag.r12_sq.back(),
                     n2_diag.V_gauss.empty() ? dnan : n2_diag.V_gauss.back());
+                if (occ_writer) {
+                    const OccupancyCensus census = occupancy_census(
+                        basis, opt.occupancy_u_on, opt.occupancy_u_off);
+                    occ_writer->write_row(step, t, phi, active_param_dim, census,
+                                          r.discarded_sq_by_group,
+                                          r.total_sq_by_group);
+                }
             }
         }
 
@@ -501,6 +695,19 @@ int run_pump(PumpConfig& cfg, const RunOptions& opt) {
         ecg1d::write_trace_csv(task_dir + "/trace.csv", trace);
         write_n2_diagnostics(task_dir + "/n2_trace.csv", n2_diag);
         write_basis_csv(task_dir + "/basis_final.csv", basis);
+
+        // R3a provenance + observed active-dimension span (appended to config.txt).
+        if (opt.occupancy_gate_enabled || opt.occupancy_diag_enabled) {
+            std::ostringstream occ;
+            occ << "occupancy_gate_enabled=" << (opt.occupancy_gate_enabled ? 1 : 0) << "\n"
+                << "occupancy_diag_enabled=" << (opt.occupancy_diag_enabled ? 1 : 0) << "\n"
+                << "occupancy_u_on=" << opt.occupancy_u_on << "\n"
+                << "occupancy_u_off=" << opt.occupancy_u_off << "\n"
+                << "occupancy_active_param_dim_min=" << min_active_param_dim << "\n"
+                << "occupancy_active_param_dim_max=" << max_active_param_dim << "\n"
+                << "occupancy_active_param_dim_nominal=" << param_dim << "\n";
+            append_config_txt(config_path, occ.str());
+        }
 
         const double E0 = trace.E_total.front();
         const double E1 = trace.E_total.back();
@@ -572,6 +779,12 @@ int run_pump(PumpConfig& cfg, const RunOptions& opt) {
                       << "energy drift (rel)      = " << energy_drift_rel << "\n"
                       << "x2 growth ratio         = " << x2_growth_ratio << "\n"
                       << std::defaultfloat;
+            if (opt.occupancy_gate_enabled) {
+                std::cout << "occupancy gate          = ON (u_on=" << opt.occupancy_u_on
+                          << ", u_off=" << opt.occupancy_u_off << ")\n"
+                          << "active param dim range  = [" << min_active_param_dim
+                          << ", " << max_active_param_dim << "] / " << param_dim << "\n";
+            }
         }
         return 0;
     } catch (const std::exception& e) {

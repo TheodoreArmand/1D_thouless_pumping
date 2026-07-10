@@ -260,6 +260,9 @@ int main() {
                              + "_tmax" + format_output_tag(cfg.total_time);
         task_dir += "_VsER" + format_output_tag(cfg.Vs / cfg.recoil_energy)
                   + "_VlER" + format_output_tag(cfg.Vl / cfg.recoil_energy);
+        if (!cfg.output_protocol_tag.empty()) {
+            task_dir += "_" + cfg.output_protocol_tag;
+        }
         std::filesystem::create_directories(task_dir);
         write_config_txt(task_dir + "/config.txt", cfg);
         write_basis_csv(task_dir + "/basis_initial.csv", basis);

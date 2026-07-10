@@ -19,6 +19,19 @@ namespace ecg1d {
 // Returns dz as VectorXcd of size = alpha_z_list.size(); caller applies to basis.
 enum class RtIntegrator { Euler, RK4, RK45 };
 
+// Optional per-parameter grouping used to decompose the rcond-discarded RHS by
+// arbitrary caller-defined groups (e.g. parameter block u/B/R/A x occupancy tier
+// core/waking/parked). group_of_param[p] is the group id in [0, n_groups) of the
+// p-th entry of alpha_z_list. When supplied to the k1 solve the step result gets
+// discarded_sq_by_group[g] = ||P_disc rhs restricted to group g||^2 and
+// total_sq_by_group[g] = ||rhs restricted to group g||^2, so per-group
+// sqrt(disc/total) is that group's truncated fraction of the gradient drive.
+// This is the H1 discriminator from vs3_n2_k32_success_roadmap_report.html section 8.2.
+struct RhsGrouping {
+    std::vector<int> group_of_param;  // size must equal alpha_z_list.size()
+    int n_groups = 0;
+};
+
 struct RealtimeStepResult {
     std::vector<BasisParams> basis;   // updated basis
     double used_dt;
@@ -51,6 +64,13 @@ struct RealtimeStepResult {
     double relative_raw_residual     = std::numeric_limits<double>::quiet_NaN();
     double discarded_rhs_fraction    = std::numeric_limits<double>::quiet_NaN();
     double metric_norm               = std::numeric_limits<double>::quiet_NaN();
+
+    // Grouped decomposition of the discarded/total RHS (filled only when a
+    // RhsGrouping is passed to the step). Both are size n_groups; entry g holds
+    // the squared RHS norm in group g that was discarded / present in total.
+    // Empty when no grouping was requested.
+    std::vector<double> discarded_sq_by_group;
+    std::vector<double> total_sq_by_group;
 };
 
 // Apply one real-time TDVP step. Does NOT adaptively rescale dt.
@@ -65,13 +85,16 @@ RealtimeStepResult realtime_tdvp_step(const std::vector<AlphaIndex>& alpha_z_lis
 //   k1 uses H(t), k2/k3 use H(t + dt/2), k4 uses H(t + dt).
 // This keeps the old frozen-H interface intact while allowing drivers to use
 // true stage-time Hamiltonians.
+// When `grouping` is non-null it is applied to the k1 solve to fill the
+// grouped discarded/total RHS breakdown in the returned RealtimeStepResult.
 RealtimeStepResult realtime_tdvp_step_rk4_time_dependent(
     const std::vector<AlphaIndex>& alpha_z_list,
     const std::vector<BasisParams>& basis,
     double t,
     double dt,
     const std::function<HamiltonianTerms(double)>& terms_at,
-    const SolverConfig& config);
+    const SolverConfig& config,
+    const RhsGrouping* grouping = nullptr);
 
 struct RealtimeTrace {
     std::vector<double> t;

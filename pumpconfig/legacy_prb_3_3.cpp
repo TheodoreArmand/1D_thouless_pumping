@@ -19,9 +19,12 @@ PumpConfig make_legacy_prb_3_3_config() {
     cfg.total_time = 160.0 * pi;
     cfg.dt = 2.0e-3;
 
-    // Phase schedule.
+    // Phase schedule generated from the same full-depth Vs=Vl=3 E_R
+    // Hamiltonian that the C++ and grid drivers evolve.
     cfg.phase_schedule_csv =
-        "rice_mele_reference/Vs3Vl3_3_3/gap_adaptive_vs3vl3_maincpp_schedule.csv";
+        "rice_mele_reference/Vs3Vl3_3_3/gap_adaptive_vs3vl3_full_depth_schedule.csv";
+    cfg.phase_schedule_convention = "full_depth_Vs3_Vl3";
+    cfg.output_protocol_tag = "full_depth_schedule";
 
     // Output cadence.
     cfg.snapshot_every = 25;

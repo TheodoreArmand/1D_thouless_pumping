@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 #
 # Submit:
-#   mkdir -p slurm/vs3_n2_dt0p01_T160pi_K32_sweep/grid_ref/ecg1d_vs3_n2_grid_k32_sweep_20260709
-#   sbatch --parsable txt_task/ecg1d_vs3_n2_grid_k32_sweep_20260709.sbatch | tee slurm/vs3_n2_dt0p01_T160pi_K32_sweep/grid_ref/ecg1d_vs3_n2_grid_k32_sweep_20260709/ecg1d_vs3_n2_grid_k32_sweep_20260709.jobid
+#   mkdir -p slurm/vs3_n2_dt0p01_T160pi_K32_sweep_full_depth_schedule/grid_ref/ecg1d_vs3_n2_grid_k32_sweep_20260709
+#   sbatch --parsable txt_task/ecg1d_vs3_n2_grid_k32_sweep_20260709.sbatch | tee slurm/vs3_n2_dt0p01_T160pi_K32_sweep_full_depth_schedule/grid_ref/ecg1d_vs3_n2_grid_k32_sweep_20260709/ecg1d_vs3_n2_grid_k32_sweep_20260709.jobid
 #
 # Monitor:
 #   squeue -u zexuan
-#   squeue -j "$(cat slurm/vs3_n2_dt0p01_T160pi_K32_sweep/grid_ref/ecg1d_vs3_n2_grid_k32_sweep_20260709/ecg1d_vs3_n2_grid_k32_sweep_20260709.jobid)"
-#   tail -f slurm/vs3_n2_dt0p01_T160pi_K32_sweep/grid_ref/ecg1d_vs3_n2_grid_k32_sweep_20260709/vs3n2gk32_*.out
-#   tail -f slurm/vs3_n2_dt0p01_T160pi_K32_sweep/grid_ref/ecg1d_vs3_n2_grid_k32_sweep_20260709/vs3n2gk32_*.err
+#   squeue -j "$(cat slurm/vs3_n2_dt0p01_T160pi_K32_sweep_full_depth_schedule/grid_ref/ecg1d_vs3_n2_grid_k32_sweep_20260709/ecg1d_vs3_n2_grid_k32_sweep_20260709.jobid)"
+#   tail -f slurm/vs3_n2_dt0p01_T160pi_K32_sweep_full_depth_schedule/grid_ref/ecg1d_vs3_n2_grid_k32_sweep_20260709/vs3n2gk32_*.out
+#   tail -f slurm/vs3_n2_dt0p01_T160pi_K32_sweep_full_depth_schedule/grid_ref/ecg1d_vs3_n2_grid_k32_sweep_20260709/vs3n2gk32_*.err
 #
 # After completion:
-#   sacct -j "$(cat slurm/vs3_n2_dt0p01_T160pi_K32_sweep/grid_ref/ecg1d_vs3_n2_grid_k32_sweep_20260709/ecg1d_vs3_n2_grid_k32_sweep_20260709.jobid)" --format=JobID,JobName,Partition,State,Elapsed,AllocCPUS,ReqMem,MaxRSS,ExitCode
+#   sacct -j "$(cat slurm/vs3_n2_dt0p01_T160pi_K32_sweep_full_depth_schedule/grid_ref/ecg1d_vs3_n2_grid_k32_sweep_20260709/ecg1d_vs3_n2_grid_k32_sweep_20260709.jobid)" --format=JobID,JobName,Partition,State,Elapsed,AllocCPUS,ReqMem,MaxRSS,ExitCode
 #
 # Cancel:
-#   scancel "$(cat slurm/vs3_n2_dt0p01_T160pi_K32_sweep/grid_ref/ecg1d_vs3_n2_grid_k32_sweep_20260709/ecg1d_vs3_n2_grid_k32_sweep_20260709.jobid)"
+#   scancel "$(cat slurm/vs3_n2_dt0p01_T160pi_K32_sweep_full_depth_schedule/grid_ref/ecg1d_vs3_n2_grid_k32_sweep_20260709/ecg1d_vs3_n2_grid_k32_sweep_20260709.jobid)"
 
 #SBATCH --job-name=vs3n2gk32
 #SBATCH --account=gyqyan
@@ -26,12 +26,12 @@
 #SBATCH --time=10:00:00
 #SBATCH --array=0-7%2
 #SBATCH --chdir=/home/gyqyan/zexuan/ecg1d_code/1D_thouless_pumping
-#SBATCH --output=slurm/vs3_n2_dt0p01_T160pi_K32_sweep/grid_ref/ecg1d_vs3_n2_grid_k32_sweep_20260709/%x_%A_%a.out
-#SBATCH --error=slurm/vs3_n2_dt0p01_T160pi_K32_sweep/grid_ref/ecg1d_vs3_n2_grid_k32_sweep_20260709/%x_%A_%a.err
+#SBATCH --output=slurm/vs3_n2_dt0p01_T160pi_K32_sweep_full_depth_schedule/grid_ref/ecg1d_vs3_n2_grid_k32_sweep_20260709/%x_%A_%a.out
+#SBATCH --error=slurm/vs3_n2_dt0p01_T160pi_K32_sweep_full_depth_schedule/grid_ref/ecg1d_vs3_n2_grid_k32_sweep_20260709/%x_%A_%a.err
 
 set -euo pipefail
 
-meta_dir="slurm/vs3_n2_dt0p01_T160pi_K32_sweep/grid_ref/ecg1d_vs3_n2_grid_k32_sweep_20260709"
+meta_dir="slurm/vs3_n2_dt0p01_T160pi_K32_sweep_full_depth_schedule/grid_ref/ecg1d_vs3_n2_grid_k32_sweep_20260709"
 mkdir -p "${meta_dir}"
 
 echo "job_id=${SLURM_JOB_ID}"
@@ -71,7 +71,7 @@ label="${labels[$idx]}"
 g_over_er="${g_values[$idx]}"
 sigma="${sigmas[$idx]}"
 
-out_dir="out/vs3_n2_dt0p01_T160pi_K32_sweep/grid_ref/${label}/g1024_dt0p01_T160pi"
+out_dir="out/vs3_n2_dt0p01_T160pi_K32_sweep_full_depth_schedule/grid_ref/${label}/g1024_dt0p01_T160pi"
 mkdir -p "${out_dir}"
 
 echo "case=${label}"
@@ -81,7 +81,7 @@ echo "out_dir=${out_dir}"
 
 srun python3 rice_mele_reference/lohes_experience/n2_grid_reference.py \
   --basis initial_state/Vs3Er_Vl3Er/initial_pathpad_N2_K32.csv \
-  --schedule rice_mele_reference/Vs3Vl3_3_3/gap_adaptive_vs3vl3_maincpp_schedule.csv \
+  --schedule rice_mele_reference/Vs3Vl3_3_3/gap_adaptive_vs3vl3_full_depth_schedule.csv \
   --grid 1024 \
   --cells 16 \
   --a-lat 8.0 \

@@ -40,6 +40,21 @@ struct RunOptions {
     // exact gauge redundancy of full A (param_dim 256 -> 192 at N=2, K=32).
     // See vs3_n2_k32_failure_analysis_report.html section 5 / experiment E2.
     bool evolve_A_offdiag_only = false;
+    // R3a occupancy gate (vs3_n2_k32_success_roadmap_report.html section 6-R3 /
+    // 8.2). When enabled, a term k's B/R/A coordinates enter the TDVP evolution
+    // parameter list only while |u_k| exceeds the hysteresis band: a parked term
+    // wakes at |u_k| > occupancy_u_on and re-parks at |u_k| < occupancy_u_off.
+    // The u channel is never gated. Parking becomes an explicit, rcond-independent
+    // rule instead of a truncation side-effect. Off by default: the alpha list is
+    // then the static make_alpha_list output and behavior is unchanged.
+    bool occupancy_gate_enabled = false;
+    // Emit occupancy_gate.csv: per-sampled-step census (core/waking/parked term
+    // counts, active param dim) plus the discarded-RHS fraction decomposed by
+    // parameter block (u/B/R/A) x occupancy tier (core/waking/parked). Works with
+    // the gate on or off; when off it records the baseline H1 fingerprint.
+    bool occupancy_diag_enabled = false;
+    double occupancy_u_on = 0.03;   // wake / core threshold on |u_k|
+    double occupancy_u_off = 0.02;  // re-park threshold on |u_k| (<= u_on)
     // Extra "key=value\n" lines appended to config.txt after write_config_txt
     // (keeps run_report untouched and the N=1 config.txt byte-stable).
     std::string config_appendix;

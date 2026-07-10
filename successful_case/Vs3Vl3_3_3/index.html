@@ -272,7 +272,7 @@
       <div class="sub">\(\Delta P/a\), one full cycle</div>
     </div>
     <div class="card">
-      <div class="label">Main.cpp gap reference</div>
+      <div class="label">Historical schedule gap</div>
       <div class="value">0.56242</div>
       <div class="sub">\(g_{\min}/E_R\), schedule grid</div>
     </div>
@@ -292,9 +292,10 @@
     <h2>1. Simulation Configuration</h2>
     <table>
       <tr><th>Purpose</th><td>Single-particle ECG real-time TDVP test for a 3/3 Thouless pump.</td></tr>
-      <tr><th>C++ config source</th><td><code>pumpconfig/legacy_prb_3_3.cpp</code></td></tr>
+      <tr><th>Archived run config</th><td><code>out/pump_vs3pad_gapadaptive_T160pi/.../config.txt</code>; the current C++ source has since switched to the full-depth schedule.</td></tr>
       <tr><th>Initial basis</th><td><code>initial_state/Vs3Er_Vl3Er/initial_pathpad_N1_K16.csv</code></td></tr>
-      <tr><th>Phase schedule</th><td><code>rice_mele_reference/Vs3Vl3_3_3/gap_adaptive_vs3vl3_maincpp_schedule.csv</code>, columns are <code>s,phi</code> with \(s=t/T\).</td></tr>
+      <tr><th>Historical phase schedule</th><td><code>rice_mele_reference/Vs3Vl3_3_3/gap_adaptive_vs3vl3_maincpp_schedule.csv</code>, a half-depth-derived schedule driving the full-depth Hamiltonian; columns are <code>s,phi</code> with \(s=t/T\).</td></tr>
+      <tr><th>Current canonical schedule</th><td><code>rice_mele_reference/Vs3Vl3_3_3/gap_adaptive_vs3vl3_full_depth_schedule.csv</code>; this archived result has not yet been rerun with it.</td></tr>
       <tr><th>Output run</th><td><code>out/pump_vs3pad_gapadaptive_T160pi/a8p000_K16_tmax502p655_VsER3p000_VlER3p000/</code></td></tr>
       <tr><th>Density player</th><td><code>successful_case/Vs3Vl3_3_3/wavefunction_density_movie.ipynb</code></td></tr>
     </table>
@@ -431,10 +432,10 @@
     </div>
 
     <div class="callout">
-      注意：当前归档里有两个参考约定。<code>gap_adaptive_grid_Vs3Vl3_maincpp.npz</code>
-      给的是 main.cpp schedule 用的 gap reference，最小 gap 为 \(0.562417E_R\)。
-      <code>grid_rm_curves_Vs3Vl3.npz</code> 给的是 Rice-Mele 参数曲线，最小 \(g_{12}\) 为
-      \(0.473767E_R\)。以后查 schedule 用前者，查 \(J_1,J_2,\Delta\) 曲线用后者。
+      这个页面描述的是历史成功 run：它用 half-depth-derived schedule
+      （\(g_{\min}=0.562417E_R\)）驱动 full-depth Hamiltonian。当前 canonical 协议改为
+      full-depth-derived schedule，与 <code>grid_rm_curves_Vs3Vl3.npz</code> 的
+      \(g_{12}^{\min}=0.473767E_R\) 一致。旧 schedule 和结果只用于复现，不应用来代表新协议。
     </div>
 
     <h3>Compact \(J_1,J_2,\Delta\) summary</h3>
@@ -512,9 +513,10 @@
     <h2>5. Files To Look At</h2>
     <p>这里故意不放超链接，避免这个报告变成目录页。需要查文件时按下面路径打开。</p>
     <table>
-      <tr><th>Config implementation</th><td><code>pumpconfig/legacy_prb_3_3.cpp</code></td></tr>
+      <tr><th>Historical config record</th><td><code>out/pump_vs3pad_gapadaptive_T160pi/.../config.txt</code></td></tr>
       <tr><th>3/3 reference folder</th><td><code>rice_mele_reference/Vs3Vl3_3_3/</code></td></tr>
-      <tr><th>Phase schedule CSV</th><td><code>rice_mele_reference/Vs3Vl3_3_3/gap_adaptive_vs3vl3_maincpp_schedule.csv</code></td></tr>
+      <tr><th>Historical phase schedule CSV</th><td><code>rice_mele_reference/Vs3Vl3_3_3/gap_adaptive_vs3vl3_maincpp_schedule.csv</code></td></tr>
+      <tr><th>Current canonical schedule CSV</th><td><code>rice_mele_reference/Vs3Vl3_3_3/gap_adaptive_vs3vl3_full_depth_schedule.csv</code></td></tr>
       <tr><th>RM parameters</th><td><code>rice_mele_reference/Vs3Vl3_3_3/grid_rm_curves_Vs3Vl3.npz</code></td></tr>
       <tr><th>Main output</th><td><code>out/pump_vs3pad_gapadaptive_T160pi/a8p000_K16_tmax502p655_VsER3p000_VlER3p000/</code></td></tr>
       <tr><th>Interactive density view</th><td><code>successful_case/Vs3Vl3_3_3/wavefunction_density_movie.ipynb</code></td></tr>

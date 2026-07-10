@@ -19,6 +19,9 @@ std::string n1_task_dir(const PumpConfig& cfg) {
                          + "_tmax" + format_output_tag(cfg.total_time);
     task_dir += "_VsER" + format_output_tag(cfg.Vs / cfg.recoil_energy)
               + "_VlER" + format_output_tag(cfg.Vl / cfg.recoil_energy);
+    if (!cfg.output_protocol_tag.empty()) {
+        task_dir += "_" + cfg.output_protocol_tag;
+    }
     return task_dir;
 }
 

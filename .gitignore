@@ -3,6 +3,8 @@
 /slurm/
 /.ipynb_checkpoints/
 /html/.ipynb_checkpoints/
+__pycache__/
+/txt_task/**/*.sbatch
 
 *.o
 *.o.d

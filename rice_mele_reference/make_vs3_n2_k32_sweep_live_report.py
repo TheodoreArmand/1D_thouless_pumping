@@ -24,10 +24,24 @@ import matplotlib.pyplot as plt
 
 REPO = Path(__file__).resolve().parent.parent
 OUT_HTML = REPO / "vs3_n2_k32_sweep_live_report.html"
+# This base report reads the pre-2026-07-10 historical sweep, whose phase clock
+# came from the retired half-depth-derived schedule. New-protocol wrappers must
+# override this path and disable legacy grid fallbacks.
 SCHEDULE_CSV = REPO / "rice_mele_reference" / "Vs3Vl3_3_3" / "gap_adaptive_vs3vl3_maincpp_schedule.csv"
-REPORT_TITLE = "Vs3/Vl3 N=2 K32 live sweep"
+REPORT_TITLE = "Vs3/Vl3 N=2 K32 historical hybrid-schedule live sweep"
 REPORT_COMMAND = "python3 rice_mele_reference/make_vs3_n2_k32_sweep_live_report.py"
-REPORT_NOTE = ""
+PROTOCOL_NOTE = (
+    "<strong>Historical protocol:</strong> full-depth Hamiltonian driven by a "
+    "half-depth-derived phase schedule."
+)
+REPORT_NOTE = (
+    " This is a historical report: the evolved Hamiltonian is full-depth, but "
+    "the phase schedule was derived from the half-depth potential."
+)
+GRID_NOTE = (
+    "New grid references use <code>initial_pathpad_N2_K32.csv</code>; "
+    "old K24 grid CSV is used only as a temporary fallback until the new grid sweep finishes."
+)
 
 TOTAL_TIME = 502.6548245743669
 GRID_STEPS = 50266
@@ -35,7 +49,15 @@ IDEAL_DELTA_P = -2.0
 SUCCESS_WIDTH_FLOOR = 0.0227284
 
 ECG_ROOT = REPO / "out" / "vs3_n2_dt0p01_T160pi_K32_sweep"
+ECG_TASK_SUFFIX = ""
 GRID_ROOT = ECG_ROOT / "grid_ref"
+GRID_FALLBACK_ROOT: Path | None = None
+GRID_AUDIT_ROOT: Path | None = None
+GRID_PRIMARY_KIND = "K32 grid CSV"
+GRID_LOG_KIND = "grid Slurm log"
+GRID_FALLBACK_KIND = "fallback K32 grid CSV"
+GRID_AUDIT_KIND = "ordinary K32 grid CSV"
+GRID_LOG_PREFIX = "vs3n2gk32"
 GRID_LOG_DIR = (
     REPO
     / "slurm"
@@ -62,6 +84,7 @@ OLD_GRID_GAUSS_SIGMA1 = (
     / "g1024_dt0p01_T160pi"
     / "n2_grid_reference_vs3_gauss_g1024_dt0p01_T160pi.csv"
 )
+ALLOW_OLD_GRID_FALLBACK = True
 
 GRID_PROGRESS_RE = re.compile(
     r"progress grid N=2 step (?P<step>\d+)/(?P<total>\d+) "
@@ -82,7 +105,9 @@ def load_schedule() -> tuple[list[float], list[float]]:
     phis: list[float] = []
     if SCHEDULE_CSV.exists():
         with SCHEDULE_CSV.open() as f:
-            reader = csv.DictReader(f)
+            reader = csv.DictReader(
+                line for line in f if not line.lstrip().startswith("#")
+            )
             for row in reader:
                 s = parse_float(row.get("s"))
                 phi = parse_float(row.get("phi"))
@@ -193,6 +218,14 @@ def fnum(x: float | None, digits: int = 4) -> str:
     return f"{x:.{digits}f}"
 
 
+def fsci(x: float | None, digits: int = 5) -> str:
+    if x is None or not math.isfinite(x):
+        return "n/a"
+    if x == 0:
+        return "0"
+    return f"{x:.{digits}e}"
+
+
 def fmt_eta(seconds: float | None) -> str:
     if seconds is None or not math.isfinite(seconds) or seconds < 0:
         return "n/a"
@@ -207,20 +240,27 @@ def ecg_progress_path(case: dict) -> Path:
         root = ECG_ROOT / "free"
     else:
         root = ECG_ROOT / case["key"]
-    return root / "a8p000_K32_tmax502p655_VsER3p000_VlER3p000" / "progress.csv"
+    task_dir = "a8p000_K32_tmax502p655_VsER3p000_VlER3p000" + ECG_TASK_SUFFIX
+    return root / task_dir / "progress.csv"
 
 
-def grid_csv_path(case: dict) -> Path:
+def grid_csv_path_at(root: Path, case: dict) -> Path:
     if case["mode"] == "free":
         subdir = "free"
         name = "n2_grid_reference_vs3_free_g1024_dt0p01_T160pi.csv"
     else:
         subdir = case["key"]
         name = f"n2_grid_reference_vs3_{case['key']}_g1024_dt0p01_T160pi.csv"
-    return GRID_ROOT / subdir / "g1024_dt0p01_T160pi" / name
+    return root / subdir / "g1024_dt0p01_T160pi" / name
+
+
+def grid_csv_path(case: dict) -> Path:
+    return grid_csv_path_at(GRID_ROOT, case)
 
 
 def old_grid_fallback(case: dict) -> Path | None:
+    if not ALLOW_OLD_GRID_FALLBACK:
+        return None
     if case["mode"] == "free":
         return OLD_GRID_FREE if OLD_GRID_FREE.exists() else None
     if case["sigma"] == 1.0:
@@ -229,7 +269,8 @@ def old_grid_fallback(case: dict) -> Path | None:
 
 
 def grid_log_candidates(case: dict) -> list[Path]:
-    pattern = f"vs3n2gk32_*_{case['grid_index']}.out"
+    log_index = case.get("grid_log_index", case["grid_index"])
+    pattern = f"{GRID_LOG_PREFIX}_*_{log_index}.out"
     return sorted(GRID_LOG_DIR.glob(pattern), key=lambda p: p.stat().st_mtime)
 
 
@@ -337,22 +378,32 @@ def read_grid_log(path: Path) -> tuple[list[dict], Path | None, str]:
     return rows, path, "grid slurm log"
 
 
-def read_grid(case: dict) -> tuple[list[dict], Path | None, str]:
+def read_grid(case: dict) -> tuple[list[dict], Path | None, str, str]:
     new_csv = grid_csv_path(case)
     if new_csv.exists():
-        return read_grid_csv(new_csv, "K32 grid CSV")
+        rows, path, kind = read_grid_csv(new_csv, GRID_PRIMARY_KIND)
+        if rows and rows[-1]["progress"] >= 99.999:
+            return rows, path, kind, "matched"
 
     logs = grid_log_candidates(case)
-    if logs:
-        rows, path, kind = read_grid_log(logs[-1])
+    for path in reversed(logs):
+        rows, path, kind = read_grid_log(path)
         if rows:
-            return rows, path, kind
+            return rows, path, GRID_LOG_KIND, "matched"
+
+    if GRID_FALLBACK_ROOT is not None:
+        fallback = grid_csv_path_at(GRID_FALLBACK_ROOT, case)
+        if fallback.exists():
+            rows, path, kind = read_grid_csv(fallback, GRID_FALLBACK_KIND)
+            if rows:
+                return rows, path, kind, "fallback"
 
     old = old_grid_fallback(case)
     if old is not None:
-        return read_grid_csv(old, "old K24 grid CSV fallback")
+        rows, path, kind = read_grid_csv(old, "old K24 grid CSV fallback")
+        return rows, path, kind, "fallback"
 
-    return [], None, "missing"
+    return [], None, "missing", "missing"
 
 
 def interpolate_grid_by_phase(grid: list[dict], phase: float, key: str) -> float:
@@ -388,8 +439,10 @@ def matched_phase_rows(ecg: list[dict], grid: list[dict]) -> list[dict]:
             continue
         grid_dP = interpolate_grid_by_phase(grid, phase, "dP")
         grid_r12 = interpolate_grid_by_phase(grid, phase, "r12")
+        grid_vg = interpolate_grid_by_phase(grid, phase, "Vg")
         if not (math.isfinite(grid_dP) and math.isfinite(grid_r12)):
             continue
+        ecg_vg = e.get("Vg", float("nan"))
         matched.append(
             {
                 "step": e["step"],
@@ -400,6 +453,11 @@ def matched_phase_rows(ecg: list[dict], grid: list[dict]) -> list[dict]:
                 "ecg_r12": e["r12"],
                 "grid_r12": grid_r12,
                 "diff_r12": e["r12"] - grid_r12,
+                "ecg_vg": ecg_vg,
+                "grid_vg": grid_vg,
+                "diff_vg": ecg_vg - grid_vg
+                if math.isfinite(ecg_vg) and math.isfinite(grid_vg)
+                else float("nan"),
             }
         )
     return matched
@@ -432,10 +490,27 @@ def phase_values(rows: list[dict]) -> list[float]:
     return values
 
 
-def plot_transport(case: dict, ecg: list[dict], grid: list[dict]) -> str:
+def plot_transport(
+        case: dict, ecg: list[dict], grid: list[dict], audit_grid: list[dict] | None = None) -> str:
     fig, ax = plt.subplots(figsize=(3.18, 2.05))
+    if audit_grid:
+        ax.plot(
+            phase_values(audit_grid),
+            [r["dP"] for r in audit_grid],
+            color="#94a3b8",
+            lw=0.9,
+            ls=":",
+            label="ordinary grid",
+        )
     if grid:
-        ax.plot(phase_values(grid), [r["dP"] for r in grid], color="#475569", lw=1.15, ls="--", label="grid")
+        ax.plot(
+            phase_values(grid),
+            [r["dP"] for r in grid],
+            color="#475569",
+            lw=1.15,
+            ls="--",
+            label="selected grid",
+        )
     if ecg:
         ax.plot(phase_values(ecg), [r["dP"] for r in ecg], color=case["color"], lw=1.25, label="ECG")
     ax.axhline(IDEAL_DELTA_P, color="#94a3b8", lw=0.75, ls=":")
@@ -510,11 +585,34 @@ def max_abs(rows: list[dict], key: str) -> float:
     return max(vals) if vals else float("nan")
 
 
+def rms(rows: list[dict], key: str) -> float:
+    vals = [r[key] for r in rows if math.isfinite(r.get(key, float("nan")))]
+    if not vals:
+        return float("nan")
+    return math.sqrt(sum(v * v for v in vals) / len(vals))
+
+
+def read_audit_grid(case: dict) -> tuple[list[dict], Path | None, str]:
+    if GRID_AUDIT_ROOT is None:
+        return [], None, "disabled"
+    path = grid_csv_path_at(GRID_AUDIT_ROOT, case)
+    if not path.exists():
+        return [], None, "missing"
+    return read_grid_csv(path, GRID_AUDIT_KIND)
+
+
 def build_case(case: dict) -> dict:
     ecg_path = ecg_progress_path(case)
     ecg_rows = read_ecg_csv(ecg_path)
-    grid_rows, grid_source, grid_kind = read_grid(case)
+    grid_rows, grid_source, grid_kind, grid_role = read_grid(case)
     common = matched_phase_rows(ecg_rows, grid_rows)
+    audit_rows, audit_source, audit_kind = read_audit_grid(case)
+    same_reference = (
+        grid_source is not None
+        and audit_source is not None
+        and grid_source.resolve() == audit_source.resolve()
+    )
+    reference_common = [] if same_reference else matched_phase_rows(grid_rows, audit_rows)
     le = latest(ecg_rows)
     lg = latest(grid_rows)
     return {
@@ -522,22 +620,33 @@ def build_case(case: dict) -> dict:
         "ecg_path": ecg_path,
         "grid_source": grid_source,
         "grid_kind": grid_kind,
+        "grid_role": grid_role,
+        "audit_source": audit_source,
+        "audit_kind": audit_kind,
         "ecg": ecg_rows,
         "grid": grid_rows,
+        "audit_grid": audit_rows,
         "common": common,
+        "reference_common": reference_common,
         "latest_ecg": le,
         "latest_grid": lg,
-        "transport_plot": plot_transport(case, ecg_rows, grid_rows),
+        "transport_plot": plot_transport(
+            case, ecg_rows, grid_rows, [] if same_reference else audit_rows
+        ),
         "diff_plot": plot_difference(case, common),
         "health_plot": plot_health(case, ecg_rows),
         "max_diff_dP": max_abs(common, "diff_dP"),
         "max_diff_r12": max_abs(common, "diff_r12"),
+        "max_reference_diff_dP": max_abs(reference_common, "diff_dP"),
+        "rms_reference_diff_dP": rms(reference_common, "diff_dP"),
+        "max_reference_diff_r12": max_abs(reference_common, "diff_r12"),
+        "max_reference_diff_vg": max_abs(reference_common, "diff_vg"),
     }
 
 
 def progress_bar(label: str, pct: float, eta: float | None, color: str) -> str:
     value = max(0.0, min(100.0, pct)) if math.isfinite(pct) else 0.0
-    return f"""
+    return rf"""
       <div class="progline">
         <span>{label}</span>
         <div class="prog"><i style="width:{value:.2f}%;background:{color}"></i></div>
@@ -554,6 +663,12 @@ def case_section(item: dict) -> str:
     grid_pct = lg["progress"] if lg else float("nan")
     ecg_eta = le["eta"] if le else float("nan")
     grid_eta = lg["eta"] if lg else float("nan")
+    grid_progress_label = "grid"
+    if GRID_AUDIT_ROOT is not None:
+        if item["grid_role"] == "matched":
+            grid_progress_label = "matched grid"
+        elif item["grid_role"] == "fallback":
+            grid_progress_label = "ordinary fallback"
     common = item["common"]
     lc = common[-1] if common else None
     minab = le["minAB"] if le else float("nan")
@@ -566,13 +681,22 @@ def case_section(item: dict) -> str:
 
     if lc:
         compare = (
-            f"phase {fnum(lc['phase'], 3)} pi: dDP={fnum(lc['diff_dP'])}, "
-            f"dr12={fnum(lc['diff_r12'])}"
+            f"\\(\\phi/\\pi={fnum(lc['phase'], 3)}\\): "
+            f"\\(\\Delta P_{{\\mathrm{{ECG}}}}-\\Delta P_{{\\mathrm{{grid}}}}"
+            f"={fnum(lc['diff_dP'])}\\), "
+            f"\\(r_{{12,\\mathrm{{ECG}}}}-r_{{12,\\mathrm{{grid}}}}"
+            f"={fnum(lc['diff_r12'])}\\)"
         )
     else:
         compare = "phase-matched comparison: waiting for grid data"
 
-    return f"""
+    audit_source_line = (
+        f"<br>ordinary-grid audit: <code>{rel(item['audit_source'])}</code>"
+        if GRID_AUDIT_ROOT is not None
+        else ""
+    )
+
+    return rf"""
     <section class="case">
       <div class="case-head">
         <div>
@@ -580,26 +704,27 @@ def case_section(item: dict) -> str:
           <p>{compare}</p>
         </div>
         <div class="{status_class}">
-          \\( \\lambda_{{\\min}}[\\operatorname{{Re}}(A+B)] \\)={fnum(minab)}<br>
+          \( \lambda_{{\min}}[\operatorname{{Re}}(A+B)] \)={fnum(minab)}<br>
           res={fnum(resid)}
         </div>
       </div>
       <div class="progress-grid">
         {progress_bar("ECG", ecg_pct, ecg_eta, item["color"])}
-        {progress_bar("grid", grid_pct, grid_eta, "#475569")}
+        {progress_bar(grid_progress_label, grid_pct, grid_eta, "#475569")}
       </div>
       <div class="mini">
         <span>ECG step {le['step'] if le else 'n/a'}/{le['total'] if le else 'n/a'}</span>
         <span>grid source: {item['grid_kind']}</span>
-        <span>max |dDP|={fnum(item['max_diff_dP'])}</span>
-        <span>max |dr12|={fnum(item['max_diff_r12'])}</span>
+        <span>\(\max|\delta\Delta P|\)={fnum(item['max_diff_dP'])}</span>
+        <span>\(\max|\delta r_{{12}}|\)={fnum(item['max_diff_r12'])}</span>
       </div>
       <div class="figs">
-        <figure><img src="{item['transport_plot']}" alt="{item['title']} transport"><figcaption>Delta P vs phase; grid is dashed.</figcaption></figure>
+        <figure><img src="{item['transport_plot']}" alt="{item['title']} transport"><figcaption>\(\Delta P\) versus phase; grid is dashed.</figcaption></figure>
         <figure><img src="{item['diff_plot']}" alt="{item['title']} difference"><figcaption>ECG minus phase-interpolated grid.</figcaption></figure>
         <figure><img src="{item['health_plot']}" alt="{item['title']} health"><figcaption>Width floor and residual monitor.</figcaption></figure>
       </div>
-      <p class="source">ECG: <code>{rel(item['ecg_path'])}</code><br>grid: <code>{rel(item['grid_source'])}</code></p>
+      <p class="source">ECG: <code>{rel(item['ecg_path'])}</code><br>
+      selected grid: <code>{rel(item['grid_source'])}</code>{audit_source_line}</p>
     </section>
     """
 
@@ -626,6 +751,69 @@ def summary_rows(items: list[dict]) -> str:
             """
         )
     return "\n".join(rows)
+
+
+def reference_audit_table(items: list[dict]) -> str:
+    if GRID_AUDIT_ROOT is None:
+        return ""
+    coverage_note = (
+        "Rows using a live matched Slurm log cover only the phase already computed."
+        if any(item["grid_kind"] == GRID_LOG_KIND for item in items)
+        else "Completed matched CSV rows cover the full pump cycle."
+    )
+    rows = []
+    for item in items:
+        common = item["reference_common"]
+        latest_common = common[-1] if common else None
+        if item["grid_kind"] == GRID_PRIMARY_KIND:
+            status = "matched complete"
+        elif item["grid_role"] == "matched":
+            status = "matched live"
+        elif item["grid_role"] == "fallback":
+            status = "matched pending; ordinary fallback active"
+        else:
+            status = "matched pending; no grid data"
+        rows.append(
+            f"""
+            <tr>
+              <td>{item['title']}</td>
+              <td>{item['grid_kind']}</td>
+              <td>{status}</td>
+              <td>{fnum(latest_common['phase'] if latest_common else float('nan'), 3)}</td>
+              <td class="num">{fsci(latest_common['diff_dP'] if latest_common else float('nan'))}</td>
+              <td class="num">{fsci(item['max_reference_diff_dP'])}</td>
+              <td class="num">{fsci(item['rms_reference_diff_dP'])}</td>
+              <td class="num">{fsci(item['max_reference_diff_r12'])}</td>
+              <td class="num">{fsci(item['max_reference_diff_vg'])}</td>
+            </tr>
+            """
+        )
+    return rf"""
+  <section class="reference-audit">
+    <h2>COMdiag-matched versus ordinary-basis grid audit</h2>
+    <p>
+      The signed difference is
+      \(\delta\Delta P=\Delta P_{{\mathrm{{grid}}}}^{{\mathrm{{COMdiag}}}}
+      -\Delta P_{{\mathrm{{grid}}}}^{{\mathrm{{ordinary}}}}\).
+      Each grid subtracts its own \(P(0)\), so this isolates dynamical initial-state sensitivity.
+      {coverage_note}
+    </p>
+    <table>
+      <tr>
+        <th>case</th>
+        <th>selected grid</th>
+        <th>status</th>
+        <th>latest \(\phi/\pi\)</th>
+        <th>latest \(\delta\Delta P\)</th>
+        <th>\(\max|\delta\Delta P|\)</th>
+        <th>RMS \(\delta\Delta P\)</th>
+        <th>\(\max|\delta r_{{12}}|\)</th>
+        <th>\(\max|\delta V_g|\)</th>
+      </tr>
+      {''.join(rows)}
+    </table>
+  </section>
+    """
 
 
 def write_report() -> Path:
@@ -664,6 +852,14 @@ def write_report() -> Path:
       border-radius: 8px;
       padding: 9px 12px;
       margin: 10px 0 14px;
+    }}
+    .reference-audit {{
+      border: 1px solid #cbd5e1;
+      border-left: 5px solid #0f766e;
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 10px 12px 2px;
+      margin: 10px 0 18px;
     }}
     table {{
       width: 100%;
@@ -764,10 +960,12 @@ def write_report() -> Path:
   <h1>{REPORT_TITLE}</h1>
   <p class="meta">Generated {generated}. Rerun <code>{REPORT_COMMAND}</code> to refresh from current files.</p>
   <div class="banner">
-    Eight cases are shown below. Each case has three compact phase-axis plots: transport, ECG-grid difference, and ECG health.
-    New grid references use <code>initial_pathpad_N2_K32.csv</code>; old K24 grid CSV is used only as a temporary fallback until the new grid sweep finishes.
+    {len(CASES)} cases are shown below. Each case has three compact phase-axis plots: transport, ECG-grid difference, and ECG health.
+    {PROTOCOL_NOTE}
+    {GRID_NOTE}
     {REPORT_NOTE}
   </div>
+  {reference_audit_table(items)}
   <table>
     <tr>
       <th>case</th>
@@ -775,8 +973,8 @@ def write_report() -> Path:
       <th>ECG ETA</th>
       <th>grid progress</th>
       <th>grid ETA</th>
-      <th>matched phase/pi</th>
-      <th>ECG-grid Delta P</th>
+      <th>matched \\(\\phi/\\pi\\)</th>
+      <th>\\(\\Delta P_{{\\mathrm{{ECG}}}}-\\Delta P_{{\\mathrm{{grid}}}}\\)</th>
       <th>\\(\\lambda_{{\\min}}[\\operatorname{{Re}}(A+B)]\\)</th>
       <th>res</th>
     </tr>
@@ -786,7 +984,9 @@ def write_report() -> Path:
 </body>
 </html>
 """
-    OUT_HTML.write_text(html)
+    tmp_html = OUT_HTML.with_suffix(OUT_HTML.suffix + ".tmp")
+    tmp_html.write_text(html)
+    tmp_html.replace(OUT_HTML)
     return OUT_HTML
 
 

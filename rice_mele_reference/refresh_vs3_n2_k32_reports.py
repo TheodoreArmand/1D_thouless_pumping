@@ -12,6 +12,9 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 REPORT_SCRIPTS = {
+    "full_depth_schedule": REPO / "rice_mele_reference" / "make_vs3_n2_k32_full_depth_schedule_live_report.py",
+    "gate1_shortwin": REPO / "rice_mele_reference" / "make_vs3_n2_gate1_shortwin_live_report.py",
+    "gate1_shortwin_k48": REPO / "rice_mele_reference" / "make_vs3_n2_gate1_shortwin_k48_live_report.py",
     "base": REPO / "rice_mele_reference" / "make_vs3_n2_k32_sweep_live_report.py",
     "fine20": REPO / "rice_mele_reference" / "make_vs3_n2_k32_sweep_fine20_live_report.py",
     "fine20_Aseed0p05_rcond1em4": REPO / "rice_mele_reference" / "make_vs3_n2_k32_sweep_fine20_Aseed0p05_rcond1em4_live_report.py",
@@ -24,7 +27,7 @@ REPORT_SCRIPTS = {
     "full20_repeat": REPO / "rice_mele_reference" / "make_vs3_n2_k32_sweep_full20_repeat_live_report.py",
     "staged": REPO / "rice_mele_reference" / "make_vs3_n2_k32_sweep_staged_live_report.py",
 }
-DEFAULT_REPORTS = ["base", "fine20"]
+DEFAULT_REPORTS = ["full_depth_schedule", "base", "fine20"]
 
 
 def stamp() -> str:

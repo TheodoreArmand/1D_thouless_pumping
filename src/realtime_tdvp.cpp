@@ -28,6 +28,10 @@ struct RhsDiag {
     double discarded_rhs_fraction     = std::numeric_limits<double>::quiet_NaN();
     double dz_norm                    = 0.0;
     double metric_norm                = std::numeric_limits<double>::quiet_NaN();
+    // Grouped discarded/total RHS decomposition (empty unless a RhsGrouping was
+    // supplied). See RhsGrouping in realtime_tdvp.hpp.
+    std::vector<double> discarded_sq_by_group;
+    std::vector<double> total_sq_by_group;
 };
 
 // Compute dz = -i * C_bar^{-1} * g at the current basis, with Tikhonov
@@ -38,7 +42,8 @@ static VectorXcd compute_rhs_dz(const std::vector<AlphaIndex>& alpha_z_list,
                                 const std::vector<BasisParams>& basis,
                                 const HamiltonianTerms& terms,
                                 const SolverConfig& config,
-                                RhsDiag* diag = nullptr) {
+                                RhsDiag* diag = nullptr,
+                                const RhsGrouping* grouping = nullptr) {
     const int d = static_cast<int>(alpha_z_list.size());
     PairCacheTable pair_cache_table(basis);
     PairCacheTableScope pair_cache_scope(pair_cache_table);
@@ -113,6 +118,30 @@ static VectorXcd compute_rhs_dz(const std::vector<AlphaIndex>& alpha_z_list,
         diag->dz_norm = dz.norm();
         const Cd mq = dz.adjoint() * (C_raw * dz);
         diag->metric_norm = std::sqrt(std::max(0.0, mq.real()));
+
+        // Optional grouped decomposition of the discarded RHS (H1 discriminator).
+        // Project the discarded eigen-coefficients back to parameter space:
+        //   r_disc = V * coeff_disc,  coeff_disc(i) = (kept ? 0 : Vtb(i)),
+        // then bucket |r_disc(p)|^2 (discarded) and |rhs(p)|^2 (total) by group.
+        // V unitary => sum_p |r_disc(p)|^2 == discarded_sq and
+        //              sum_p |rhs(p)|^2   == total_sq, so the group sums are a
+        // partition of the same scalars reported above.
+        if (grouping && grouping->n_groups > 0 &&
+            static_cast<int>(grouping->group_of_param.size()) == d) {
+            VectorXcd coeff_disc(ev.size());
+            for (int i = 0; i < ev.size(); ++i) {
+                coeff_disc(i) = hard_keep(i) ? Cd(0.0, 0.0) : Vtb(i);
+            }
+            const VectorXcd r_disc = V * coeff_disc;
+            diag->discarded_sq_by_group.assign(grouping->n_groups, 0.0);
+            diag->total_sq_by_group.assign(grouping->n_groups, 0.0);
+            for (int p = 0; p < d; ++p) {
+                const int g = grouping->group_of_param[p];
+                if (g < 0 || g >= grouping->n_groups) continue;
+                diag->discarded_sq_by_group[g] += std::norm(r_disc(p));
+                diag->total_sq_by_group[g] += std::norm(rhs(p));
+            }
+        }
     }
     return dz;
 }
@@ -131,6 +160,8 @@ static void fill_step_result(RealtimeStepResult& result, const RhsDiag& diag) {
     result.relative_raw_residual     = diag.relative_raw_residual;
     result.discarded_rhs_fraction    = diag.discarded_rhs_fraction;
     result.metric_norm               = diag.metric_norm;
+    result.discarded_sq_by_group     = diag.discarded_sq_by_group;
+    result.total_sq_by_group         = diag.total_sq_by_group;
 }
 
 RealtimeStepResult realtime_tdvp_step(const std::vector<AlphaIndex>& alpha_z_list,
@@ -180,11 +211,12 @@ RealtimeStepResult realtime_tdvp_step_rk4_time_dependent(
     double t,
     double dt,
     const std::function<HamiltonianTerms(double)>& terms_at,
-    const SolverConfig& config) {
+    const SolverConfig& config,
+    const RhsGrouping* grouping) {
     RhsDiag diag;
 
     const HamiltonianTerms terms_1 = terms_at(t);
-    VectorXcd k1 = compute_rhs_dz(alpha_z_list, basis, terms_1, config, &diag);
+    VectorXcd k1 = compute_rhs_dz(alpha_z_list, basis, terms_1, config, &diag, grouping);
 
     const HamiltonianTerms terms_mid = terms_at(t + 0.5 * dt);
     std::vector<BasisParams> b1 = basis;
