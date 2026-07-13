@@ -1,0 +1,938 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Vs=Vl=3ER 成功 N=1 Thouless 泵案例的 K=16 ECG 预埋初态可视化。">
+  <title>N=1 K=16 预埋初态｜Vs3/Vl3 成功案例</title>
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['\\(', '\\)']],
+        displayMath: [['\\[', '\\]']]
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <style>
+    :root {
+      --bg: #f4f7fa;
+      --panel: #ffffff;
+      --panel-soft: #f8fafc;
+      --ink: #17212b;
+      --muted: #5d6b78;
+      --line: #d9e1e8;
+      --blue: #1f64a4;
+      --blue-soft: #e9f2fb;
+      --teal: #0f8172;
+      --teal-soft: #e7f6f2;
+      --gold: #a36b0f;
+      --red: #b34b4b;
+      --code: #edf2f6;
+      --shadow: 0 16px 40px rgba(28, 49, 68, 0.08);
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 92% 0, rgba(31, 100, 164, 0.10), transparent 31rem),
+        linear-gradient(180deg, #edf3f7 0, var(--bg) 27rem);
+      font-family: var(--sans);
+      line-height: 1.58;
+    }
+
+    main {
+      width: min(1220px, calc(100% - 36px));
+      margin: 0 auto;
+      padding: 34px 0 58px;
+    }
+
+    a { color: var(--blue); }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin-bottom: 24px;
+      color: var(--muted);
+      font-size: 14px;
+      text-decoration: none;
+    }
+
+    .back-link:hover { color: var(--blue); }
+
+    header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 28px;
+      align-items: end;
+      margin-bottom: 22px;
+    }
+
+    .eyebrow {
+      margin: 0 0 9px;
+      color: var(--teal);
+      font-size: 13px;
+      font-weight: 750;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 860px;
+      font-size: clamp(31px, 5vw, 55px);
+      line-height: 1.08;
+      letter-spacing: -0.035em;
+    }
+
+    .lead {
+      max-width: 860px;
+      margin: 15px 0 0;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .direction-badge {
+      min-width: 196px;
+      padding: 15px 17px;
+      border: 1px solid #bcd5e8;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.74);
+      box-shadow: var(--shadow);
+    }
+
+    .direction-badge span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .direction-badge strong {
+      display: block;
+      margin-top: 3px;
+      color: var(--blue);
+      font-size: 25px;
+      line-height: 1.2;
+    }
+
+    .direction-badge small {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin: 20px 0;
+    }
+
+    .card {
+      min-height: 104px;
+      padding: 15px 17px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: rgba(255, 255, 255, 0.87);
+      box-shadow: 0 8px 24px rgba(32, 51, 69, 0.045);
+    }
+
+    .card .label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 680;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .card .value {
+      margin-top: 4px;
+      font-family: var(--mono);
+      font-size: 23px;
+      font-weight: 760;
+      line-height: 1.2;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .card .note {
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .panel {
+      margin-top: 17px;
+      padding: 21px 23px 23px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      align-items: start;
+      margin-bottom: 13px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.25;
+      letter-spacing: -0.015em;
+    }
+
+    h3 {
+      margin: 0 0 9px;
+      font-size: 16px;
+    }
+
+    .panel-head p,
+    .caption,
+    .small-note {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .panel-head p {
+      max-width: 690px;
+      margin: 4px 0 0;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 8px 14px;
+      padding-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .swatch {
+      width: 19px;
+      height: 4px;
+      border-radius: 9px;
+      background: currentColor;
+    }
+
+    .swatch.dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+    }
+
+    .chart-wrap {
+      position: relative;
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid #e1e7ec;
+      border-radius: 10px;
+      background: #fbfdff;
+    }
+
+    .chart-stage { min-width: 850px; }
+    .chart-stage.basis { min-width: 980px; }
+
+    svg.chart {
+      display: block;
+      width: 100%;
+      height: auto;
+      font-family: var(--sans);
+    }
+
+    .chart .grid-line { stroke: #dce4ea; stroke-width: 1; }
+    .chart .grid-line.minor { stroke: #edf1f4; }
+    .chart .axis-line { stroke: #8796a3; stroke-width: 1.1; }
+    .chart .tick-label { fill: #657481; font-size: 12px; }
+    .chart .axis-label { fill: #425260; font-size: 13px; font-weight: 650; }
+    .chart .annotation { fill: #385064; font-size: 12px; font-weight: 680; }
+    .chart .tiny { fill: #6c7b87; font-size: 10.5px; }
+    .chart .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+    .chart .tooltip-text { fill: #f8fbfd; font-family: var(--mono); font-size: 11px; }
+
+    .caption {
+      margin: 11px 2px 0;
+    }
+
+    .interpretation {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 16px;
+      margin-top: 17px;
+    }
+
+    .info-box {
+      padding: 17px 18px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: var(--panel-soft);
+    }
+
+    .info-box p { margin: 0; }
+    .info-box p + p { margin-top: 9px; }
+
+    .equation {
+      margin: 0;
+      padding: 16px 20px;
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--teal);
+      border-radius: 9px;
+      background: #fbfcfd;
+      font-size: 1.02rem;
+      overflow-x: auto;
+      white-space: normal;
+      line-height: 1.45;
+    }
+
+    .equation + .equation { margin-top: 11px; }
+    .equation mjx-container[jax="SVG"][display="true"] { margin: 0.3em 0; }
+
+    .equation .note {
+      margin-top: 8px;
+      color: var(--muted);
+      font-family: var(--sans);
+      font-size: 0.91rem;
+    }
+
+    code {
+      display: inline;
+      padding: 2px 5px;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: var(--code);
+      font-family: var(--mono);
+      font-size: 0.9em;
+      overflow-wrap: anywhere;
+    }
+
+    .source-line {
+      margin: 17px 2px 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .source-line a { text-decoration-thickness: 1px; }
+
+    noscript {
+      display: block;
+      margin: 12px 0;
+      padding: 12px 14px;
+      border-left: 4px solid var(--red);
+      background: #fff1f1;
+      color: #652d2d;
+    }
+
+    @media (max-width: 920px) {
+      header { grid-template-columns: 1fr; }
+      .direction-badge { width: min(330px, 100%); }
+      .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .panel-head { display: block; }
+      .legend { justify-content: flex-start; margin-top: 9px; }
+      .interpretation { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 560px) {
+      main { width: min(100% - 22px, 1220px); padding-top: 22px; }
+      .cards { grid-template-columns: 1fr; }
+      .panel { padding: 17px 14px 18px; }
+      .lead { font-size: 15px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <a class="back-link" href="index.html" aria-label="返回成功案例总览">← 返回 Vs3/Vl3 3/3 成功案例</a>
+
+  <header>
+    <div>
+      <p class="eyebrow">Successful N=1 case · exact t=0 reconstruction</p>
+      <h1>
+        \(N=1,\ K=16\) ECG<br>
+        预埋初态
+      </h1>
+      <p class="lead">
+        这不是概念示意图：页面直接用历史成功 run 在 \(t=0\) 写出的 16 组
+        \(u_k,B_k,R_k\) 重建波函数。主图显示真实初态密度；第二幅图把普通线性尺度中几乎看不见的
+        path-pad 高斯单独展开。
+      </p>
+    </div>
+    <div class="direction-badge">
+      <span>Archived pump direction</span>
+      <strong>\(0 \longrightarrow -a\)</strong>
+      <small>\(a=8\)，最终 \(\Delta P/a=-0.99736\)</small>
+    </div>
+  </header>
+
+  <section class="cards" aria-label="初态摘要">
+    <div class="card">
+      <div class="label">Basis layout</div>
+      <div class="value">8 + 8</div>
+      <div class="note">8 个 core fit + 8 个 path-pad</div>
+    </div>
+    <div class="card">
+      <div class="label">Normalization</div>
+      <div class="value" id="normValue">1.000000</div>
+      <div class="note">解析高斯积分 \(\int \rho_0(x)\,dx\)</div>
+    </div>
+    <div class="card">
+      <div class="label">Initial center</div>
+      <div class="value" id="meanValue">−0.001326</div>
+      <div class="note">\(\langle x\rangle_0\)，与 run trace 一致</div>
+    </div>
+    <div class="card">
+      <div class="label">Initial width</div>
+      <div class="value" id="sigmaValue">0.605031</div>
+      <div class="note">\(\sigma_x=\sqrt{\langle x^2\rangle-\langle x\rangle^2}\)</div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>初态密度落在超晶格中的哪里</h2>
+        <p>
+          上图使用线性密度轴；下方同时画出相对峰值的对数密度，因此能看到沿 \(-x\) 方向预埋的微弱尾部。
+          把鼠标移到图上可读取数值。
+        </p>
+      </div>
+      <div class="legend" aria-label="图例">
+        <span class="legend-item" style="color:#1f64a4"><span class="swatch"></span>\(\rho_0(x)\)</span>
+        <span class="legend-item" style="color:#a36b0f"><span class="swatch"></span>\(V(x,0)/E_R\)</span>
+        <span class="legend-item" style="color:#0f8172"><span class="swatch dot"></span>path-pad 中心</span>
+      </div>
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart-stage">
+        <svg id="stateChart" class="chart" viewBox="0 0 1180 650" role="img"
+             aria-label="N=1 初态密度、晶格势和对数密度图"></svg>
+      </div>
+    </div>
+    <noscript>此图由页面内嵌 JavaScript 从 16 个 ECG 参数现场重建；请启用 JavaScript 查看。</noscript>
+    <p class="caption">
+      \(t=0\) 时 \(\phi=0\)，深阱位于 \(x=0\)（以及相隔 \(a=8\) 的等价位置）。
+      对数图中 \(x=-2,-4,-6,-8\) 附近的小结构来自预埋高斯；它们并不表示另有粒子占据这些位置。
+    </p>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div>
+        <h2>16 个高斯怎样“预埋”</h2>
+        <p>
+          每一行的高斯形状按本行峰值归一化，只用于看中心与宽度；最右侧短条使用
+          \(\log_{10}|u_k|\) 的统一尺度，保留真实系数大小。向下的红色形状表示负系数。
+        </p>
+      </div>
+      <div class="legend" aria-label="基函数图例">
+        <span class="legend-item" style="color:#1f64a4"><span class="swatch"></span>core \(u_k\gt0\)</span>
+        <span class="legend-item" style="color:#b34b4b"><span class="swatch"></span>core \(u_k\lt0\)</span>
+        <span class="legend-item" style="color:#0f8172"><span class="swatch"></span>path-pad</span>
+      </div>
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart-stage basis">
+        <svg id="basisChart" class="chart" viewBox="0 0 1180 690" role="img"
+             aria-label="K=16 ECG core 和 path-pad 高斯参数图"></svg>
+      </div>
+    </div>
+    <p class="caption">
+      CSV 原始顺序保持不变：\(k=0,\ldots,7\) 是 core fit；\(k=8,\ldots,15\) 是四个下游中心
+      \(R=-2,-4,-6,-8\)，每个中心各配一个宽高斯与窄高斯。path-pad 系数均为
+      \(u_k=9.9947437428568446\times10^{-4}\)。
+    </p>
+  </section>
+
+  <section class="interpretation">
+    <div class="info-box">
+      <h3>怎样读这幅图</h3>
+      <p>
+        物理初态仍然是 \(x=0\) 深阱中的一个归一化单粒子波包。8 个 path-pad 的孤立组合范数只有
+        <span id="padNormValue" class="mono">2.3841×10⁻⁵</span>，所以在线性密度图中几乎不可见。
+      </p>
+      <p>
+        它们的作用是预先把可变高斯放到即将经过的 \(-x\) 路径上，为实时 TDVP 留出可被激活的变分自由度；
+        不是额外的八个粒子，也不是八个独立占据态。
+      </p>
+    </div>
+
+    <div>
+      <div class="equation">
+        \[
+        \psi_0(x)
+        =
+        \sum_{k=0}^{15}
+        u_k\exp\!\left[-B_k(x-R_k)^2\right],
+        \qquad A_k=0 .
+        \]
+        <div class="note">本案例所有初始参数均为实数；这一式子就是 C++/notebook 使用的 \(N=1\) ECG 形式。</div>
+      </div>
+      <div class="equation">
+        \[
+        \rho_0(x)=\frac{|\psi_0(x)|^2}{\int |\psi_0(x)|^2\,dx},
+        \qquad
+        \frac{V(x,0)}{E_R}
+        =-3\cos\!\left(\frac{4\pi x}{a}\right)
+        -3\cos\!\left(\frac{2\pi x}{a}\right),
+        \quad a=8 .
+        \]
+      </div>
+    </div>
+  </section>
+
+  <p class="source-line">
+    数据源：
+    <a href="../../initial_state/Vs3Er_Vl3Er/initial_pathpad_N1_K16.csv"><code>initial_state/Vs3Er_Vl3Er/initial_pathpad_N1_K16.csv</code></a>。
+    它与历史成功 run 保存的 <code>basis_initial.csv</code> 逐字节相同；没有使用 imaginary-time initialization。
+  </p>
+</main>
+
+<script>
+(() => {
+  'use strict';
+
+  const basis = [
+    { k: 0,  u:  0.70344687548747642,    B: 0.57436677743869635, R:  0.0, role: 'core' },
+    { k: 1,  u: -0.021865314906762544,   B: 2.1961082666773684,  R: -1.5, role: 'core' },
+    { k: 2,  u: -0.021865314906762617,   B: 2.1961082666773684,  R:  1.5, role: 'core' },
+    { k: 3,  u:  0.0081589407245577835,  B: 1.4359169435967407,  R:  2.5, role: 'core' },
+    { k: 4,  u:  0.0081589407245577731,  B: 1.4359169435967407,  R: -2.5, role: 'core' },
+    { k: 5,  u:  0.12589472272129512,    B: 2.1961082666773684,  R:  0.0, role: 'core' },
+    { k: 6,  u:  0.0018301181688070423,  B: 2.1961082666773684,  R: -4.0, role: 'core' },
+    { k: 7,  u:  0.0018301181688070319,  B: 2.1961082666773684,  R:  4.0, role: 'core' },
+    { k: 8,  u:  0.00099947437428568446, B: 0.57436677743869635, R: -2.0, role: 'path-pad' },
+    { k: 9,  u:  0.00099947437428568446, B: 2.1961082666773684,  R: -2.0, role: 'path-pad' },
+    { k: 10, u:  0.00099947437428568446, B: 0.57436677743869635, R: -4.0, role: 'path-pad' },
+    { k: 11, u:  0.00099947437428568446, B: 2.1961082666773684,  R: -4.0, role: 'path-pad' },
+    { k: 12, u:  0.00099947437428568446, B: 0.57436677743869635, R: -6.0, role: 'path-pad' },
+    { k: 13, u:  0.00099947437428568446, B: 2.1961082666773684,  R: -6.0, role: 'path-pad' },
+    { k: 14, u:  0.00099947437428568446, B: 0.57436677743869635, R: -8.0, role: 'path-pad' },
+    { k: 15, u:  0.00099947437428568446, B: 2.1961082666773684,  R: -8.0, role: 'path-pad' }
+  ];
+
+  const NS = 'http://www.w3.org/2000/svg';
+  const colors = {
+    blue: '#1f64a4',
+    blueFill: '#dbeafa',
+    teal: '#0f8172',
+    tealFill: '#d9f0eb',
+    gold: '#a36b0f',
+    red: '#b34b4b',
+    ink: '#243442',
+    muted: '#657481',
+    line: '#dce4ea',
+    panel: '#fbfdff'
+  };
+
+  function svgEl(name, attrs = {}, text = '') {
+    const node = document.createElementNS(NS, name);
+    for (const [key, value] of Object.entries(attrs)) {
+      node.setAttribute(key, String(value));
+    }
+    if (text !== '') node.textContent = text;
+    return node;
+  }
+
+  function add(parent, name, attrs = {}, text = '') {
+    const node = svgEl(name, attrs, text);
+    parent.appendChild(node);
+    return node;
+  }
+
+  function linspace(start, stop, count) {
+    return Array.from({ length: count }, (_, i) => start + (stop - start) * i / (count - 1));
+  }
+
+  function component(term, x) {
+    const dx = x - term.R;
+    return term.u * Math.exp(-term.B * dx * dx);
+  }
+
+  function psi(x, terms = basis) {
+    return terms.reduce((sum, term) => sum + component(term, x), 0);
+  }
+
+  function potential(x) {
+    return -3 * Math.cos(4 * Math.PI * x / 8) - 3 * Math.cos(2 * Math.PI * x / 8);
+  }
+
+  function analyticMoments(terms = basis) {
+    let norm = 0;
+    let first = 0;
+    let second = 0;
+    for (const left of terms) {
+      for (const right of terms) {
+        const width = left.B + right.B;
+        const center = (left.B * left.R + right.B * right.R) / width;
+        const exponential = Math.exp(
+          -left.B * left.R * left.R
+          -right.B * right.R * right.R
+          +width * center * center
+        );
+        const overlap = left.u * right.u * Math.sqrt(Math.PI / width) * exponential;
+        norm += overlap;
+        first += center * overlap;
+        second += (center * center + 1 / (2 * width)) * overlap;
+      }
+    }
+    return { norm, mean: first / norm, second: second / norm };
+  }
+
+  const moments = analyticMoments();
+  const padMoments = analyticMoments(basis.filter(term => term.role === 'path-pad'));
+  const sigma = Math.sqrt(Math.max(0, moments.second - moments.mean * moments.mean));
+
+  document.getElementById('normValue').textContent = moments.norm.toFixed(6);
+  document.getElementById('meanValue').textContent = moments.mean.toFixed(6).replace('-', '−');
+  document.getElementById('sigmaValue').textContent = sigma.toFixed(6);
+  document.getElementById('padNormValue').textContent = `${(padMoments.norm / 1e-5).toFixed(4)}×10⁻⁵`;
+
+  function pathFrom(points) {
+    return points.map((point, index) => `${index ? 'L' : 'M'}${point[0].toFixed(2)},${point[1].toFixed(2)}`).join(' ');
+  }
+
+  function drawStateChart() {
+    const svg = document.getElementById('stateChart');
+    svg.replaceChildren();
+
+    const xMin = -10;
+    const xMax = 6;
+    const left = 82;
+    const right = 1084;
+    const width = right - left;
+    const top = 76;
+    const height = 332;
+    const logTop = 488;
+    const logHeight = 108;
+    const densityMax = 0.75;
+    const potentialMin = -6.6;
+    const potentialMax = 4.0;
+    const logMin = -7;
+    const rhoPeak = Math.max(...linspace(xMin, xMax, 1801).map(x => {
+      const value = psi(x);
+      return value * value / moments.norm;
+    }));
+
+    const mapX = x => left + (x - xMin) / (xMax - xMin) * width;
+    const mapDensity = y => top + height - y / densityMax * height;
+    const mapPotential = y => top + height - (y - potentialMin) / (potentialMax - potentialMin) * height;
+    const mapLog = y => logTop + logHeight - (y - logMin) / (0 - logMin) * logHeight;
+
+    const defs = add(svg, 'defs');
+    const densityGradient = add(defs, 'linearGradient', { id: 'densityFill', x1: 0, y1: 0, x2: 0, y2: 1 });
+    add(densityGradient, 'stop', { offset: '0%', 'stop-color': colors.blue, 'stop-opacity': 0.34 });
+    add(densityGradient, 'stop', { offset: '100%', 'stop-color': colors.blue, 'stop-opacity': 0.03 });
+    const logGradient = add(defs, 'linearGradient', { id: 'logFill', x1: 0, y1: 0, x2: 0, y2: 1 });
+    add(logGradient, 'stop', { offset: '0%', 'stop-color': colors.blue, 'stop-opacity': 0.32 });
+    add(logGradient, 'stop', { offset: '100%', 'stop-color': colors.blue, 'stop-opacity': 0.06 });
+    const arrow = add(defs, 'marker', {
+      id: 'arrowHead', viewBox: '0 0 10 10', refX: 8, refY: 5,
+      markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse'
+    });
+    add(arrow, 'path', { d: 'M 0 0 L 10 5 L 0 10 z', fill: colors.teal });
+    const clipMain = add(defs, 'clipPath', { id: 'clipMain' });
+    add(clipMain, 'rect', { x: left, y: top, width, height });
+    const clipLog = add(defs, 'clipPath', { id: 'clipLog' });
+    add(clipLog, 'rect', { x: left, y: logTop, width, height: logHeight });
+
+    add(svg, 'rect', { x: left, y: top, width, height, fill: '#ffffff' });
+    add(svg, 'rect', { x: left, y: logTop, width, height: logHeight, fill: '#ffffff' });
+
+    for (let x = xMin; x <= xMax + 1e-9; x += 2) {
+      const px = mapX(x);
+      add(svg, 'line', { x1: px, x2: px, y1: top, y2: top + height, class: 'grid-line minor' });
+      add(svg, 'line', { x1: px, x2: px, y1: logTop, y2: logTop + logHeight, class: 'grid-line minor' });
+      add(svg, 'text', { x: px, y: logTop + logHeight + 23, 'text-anchor': 'middle', class: 'tick-label mono' }, String(x));
+    }
+
+    for (const y of [0, 0.2, 0.4, 0.6]) {
+      const py = mapDensity(y);
+      add(svg, 'line', { x1: left, x2: right, y1: py, y2: py, class: 'grid-line' });
+      add(svg, 'text', { x: left - 12, y: py + 4, 'text-anchor': 'end', class: 'tick-label mono' }, y.toFixed(1));
+    }
+
+    for (const y of [-6, -3, 0, 3]) {
+      const py = mapPotential(y);
+      add(svg, 'text', { x: right + 12, y: py + 4, class: 'tick-label mono', fill: colors.gold }, String(y));
+    }
+
+    for (const y of [-6, -4, -2, 0]) {
+      const py = mapLog(y);
+      add(svg, 'line', { x1: left, x2: right, y1: py, y2: py, class: 'grid-line' });
+      add(svg, 'text', { x: left - 12, y: py + 4, 'text-anchor': 'end', class: 'tick-label mono' }, String(y));
+    }
+
+    for (const boundary of [-4, 4]) {
+      const px = mapX(boundary);
+      add(svg, 'line', {
+        x1: px, x2: px, y1: top, y2: logTop + logHeight,
+        stroke: '#acb8c2', 'stroke-width': 1.1, 'stroke-dasharray': '5 5'
+      });
+      add(svg, 'text', { x: px, y: top + 17, 'text-anchor': 'middle', class: 'tiny' }, 'cell boundary');
+    }
+
+    const xs = linspace(xMin, xMax, 1001);
+    const densityPoints = [];
+    const potentialPoints = [];
+    const logPoints = [];
+    for (const x of xs) {
+      const value = psi(x);
+      const rho = value * value / moments.norm;
+      const logRho = Math.max(logMin, Math.log10(Math.max(rho / rhoPeak, 1e-14)));
+      densityPoints.push([mapX(x), mapDensity(rho)]);
+      potentialPoints.push([mapX(x), mapPotential(potential(x))]);
+      logPoints.push([mapX(x), mapLog(logRho)]);
+    }
+
+    const mainGroup = add(svg, 'g', { 'clip-path': 'url(#clipMain)' });
+    const densityArea = [
+      [mapX(xMin), mapDensity(0)],
+      ...densityPoints,
+      [mapX(xMax), mapDensity(0)]
+    ];
+    add(mainGroup, 'path', { d: `${pathFrom(densityArea)} Z`, fill: 'url(#densityFill)' });
+    add(mainGroup, 'path', {
+      d: pathFrom(densityPoints), fill: 'none', stroke: colors.blue,
+      'stroke-width': 2.8, 'stroke-linejoin': 'round', 'stroke-linecap': 'round'
+    });
+    add(mainGroup, 'path', {
+      d: pathFrom(potentialPoints), fill: 'none', stroke: colors.gold,
+      'stroke-width': 2.2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round'
+    });
+
+    const logGroup = add(svg, 'g', { 'clip-path': 'url(#clipLog)' });
+    const logArea = [
+      [mapX(xMin), mapLog(logMin)],
+      ...logPoints,
+      [mapX(xMax), mapLog(logMin)]
+    ];
+    add(logGroup, 'path', { d: `${pathFrom(logArea)} Z`, fill: 'url(#logFill)' });
+    add(logGroup, 'path', {
+      d: pathFrom(logPoints), fill: 'none', stroke: colors.blue,
+      'stroke-width': 2.1, 'stroke-linejoin': 'round', 'stroke-linecap': 'round'
+    });
+
+    for (const x of [-2, -4, -6, -8]) {
+      const px = mapX(x);
+      add(svg, 'line', {
+        x1: px, x2: px, y1: logTop, y2: logTop + logHeight,
+        stroke: colors.teal, 'stroke-width': 1.1, 'stroke-dasharray': '3 4', opacity: 0.68
+      });
+      add(svg, 'circle', { cx: px, cy: logTop + logHeight - 7, r: 4.1, fill: colors.teal });
+    }
+
+    add(svg, 'line', {
+      x1: mapX(-0.25), x2: mapX(-7.75), y1: 39, y2: 39,
+      stroke: colors.teal, 'stroke-width': 2.1, 'marker-end': 'url(#arrowHead)'
+    });
+    add(svg, 'text', {
+      x: (mapX(-0.25) + mapX(-7.75)) / 2, y: 29,
+      'text-anchor': 'middle', class: 'annotation', fill: colors.teal
+    }, '历史成功泵浦方向  −x');
+
+    add(svg, 'line', {
+      x1: mapX(0), x2: mapX(0), y1: top, y2: top + height,
+      stroke: colors.ink, 'stroke-width': 1.15, 'stroke-dasharray': '4 4', opacity: 0.55
+    });
+    add(svg, 'text', { x: mapX(0) + 8, y: top + 31, class: 'annotation' }, '初态深阱  x=0');
+    add(svg, 'text', { x: mapX(-8) + 8, y: top + 31, class: 'annotation' }, '下一等价深阱  x=−8');
+
+    add(svg, 'line', { x1: left, x2: right, y1: top + height, y2: top + height, class: 'axis-line' });
+    add(svg, 'line', { x1: left, x2: left, y1: top, y2: top + height, class: 'axis-line' });
+    add(svg, 'line', { x1: right, x2: right, y1: top, y2: top + height, class: 'axis-line' });
+    add(svg, 'line', { x1: left, x2: right, y1: logTop + logHeight, y2: logTop + logHeight, class: 'axis-line' });
+    add(svg, 'line', { x1: left, x2: left, y1: logTop, y2: logTop + logHeight, class: 'axis-line' });
+
+    add(svg, 'text', {
+      x: 22, y: top + height / 2, transform: `rotate(-90 22 ${top + height / 2})`,
+      'text-anchor': 'middle', class: 'axis-label', fill: colors.blue
+    }, '归一化密度  ρ₀(x)');
+    add(svg, 'text', {
+      x: 1151, y: top + height / 2, transform: `rotate(90 1151 ${top + height / 2})`,
+      'text-anchor': 'middle', class: 'axis-label', fill: colors.gold
+    }, '晶格势  V(x,0) / Eᵣ');
+    add(svg, 'text', {
+      x: 22, y: logTop + logHeight / 2, transform: `rotate(-90 22 ${logTop + logHeight / 2})`,
+      'text-anchor': 'middle', class: 'axis-label', fill: colors.blue
+    }, 'log₁₀[ρ₀/ρₘₐₓ]');
+    add(svg, 'text', { x: (left + right) / 2, y: 638, 'text-anchor': 'middle', class: 'axis-label' }, '位置  x（code length）');
+    add(svg, 'text', { x: right, y: logTop - 10, 'text-anchor': 'end', class: 'tiny' }, '绿色圆点：path-pad 中心');
+
+    const hover = add(svg, 'g', { visibility: 'hidden', 'pointer-events': 'none' });
+    const crosshair = add(hover, 'line', {
+      y1: top, y2: logTop + logHeight, stroke: '#314554', 'stroke-width': 1,
+      'stroke-dasharray': '3 3', opacity: 0.65
+    });
+    const rhoDot = add(hover, 'circle', { r: 4.2, fill: colors.blue, stroke: '#fff', 'stroke-width': 1.5 });
+    const potDot = add(hover, 'circle', { r: 4.2, fill: colors.gold, stroke: '#fff', 'stroke-width': 1.5 });
+    const tooltip = add(hover, 'g');
+    add(tooltip, 'rect', { x: 0, y: 0, width: 174, height: 62, rx: 7, fill: '#263846', opacity: 0.94 });
+    const tip1 = add(tooltip, 'text', { x: 11, y: 18, class: 'tooltip-text' });
+    const tip2 = add(tooltip, 'text', { x: 11, y: 36, class: 'tooltip-text' });
+    const tip3 = add(tooltip, 'text', { x: 11, y: 53, class: 'tooltip-text' });
+
+    const overlay = add(svg, 'rect', {
+      x: left, y: top, width, height: logTop + logHeight - top,
+      fill: 'transparent', 'pointer-events': 'all'
+    });
+
+    overlay.addEventListener('pointermove', event => {
+      const point = svg.createSVGPoint();
+      point.x = event.clientX;
+      point.y = event.clientY;
+      const local = point.matrixTransform(svg.getScreenCTM().inverse());
+      const px = Math.max(left, Math.min(right, local.x));
+      const x = xMin + (px - left) / width * (xMax - xMin);
+      const value = psi(x);
+      const rho = value * value / moments.norm;
+      const v = potential(x);
+      const boxX = px > right - 190 ? px - 184 : px + 10;
+      const boxY = Math.max(top + 8, Math.min(top + height - 70, local.y - 31));
+      crosshair.setAttribute('x1', px);
+      crosshair.setAttribute('x2', px);
+      rhoDot.setAttribute('cx', px);
+      rhoDot.setAttribute('cy', mapDensity(rho));
+      potDot.setAttribute('cx', px);
+      potDot.setAttribute('cy', mapPotential(v));
+      tooltip.setAttribute('transform', `translate(${boxX} ${boxY})`);
+      tip1.textContent = `x   = ${x.toFixed(4)}`;
+      tip2.textContent = `rho = ${rho.toExponential(5)}`;
+      tip3.textContent = `V/Er= ${v.toFixed(5)}`;
+      hover.setAttribute('visibility', 'visible');
+    });
+    overlay.addEventListener('pointerleave', () => hover.setAttribute('visibility', 'hidden'));
+  }
+
+  function drawBasisChart() {
+    const svg = document.getElementById('basisChart');
+    svg.replaceChildren();
+
+    const xMin = -10;
+    const xMax = 6;
+    const left = 122;
+    const right = 772;
+    const width = right - left;
+    const rowTop = 92;
+    const rowHeight = 32;
+    const rowBottom = rowTop + basis.length * rowHeight;
+    const mapX = x => left + (x - xMin) / (xMax - xMin) * width;
+
+    add(svg, 'rect', { x: left, y: rowTop, width, height: 8 * rowHeight, fill: '#f5f9fd' });
+    add(svg, 'rect', { x: left, y: rowTop + 8 * rowHeight, width, height: 8 * rowHeight, fill: '#f2fbf8' });
+
+    for (let x = xMin; x <= xMax + 1e-9; x += 2) {
+      const px = mapX(x);
+      add(svg, 'line', { x1: px, x2: px, y1: rowTop, y2: rowBottom, class: 'grid-line minor' });
+      add(svg, 'text', { x: px, y: rowBottom + 25, 'text-anchor': 'middle', class: 'tick-label mono' }, String(x));
+    }
+
+    add(svg, 'text', { x: 19, y: 61, class: 'axis-label' }, 'index / role');
+    add(svg, 'text', { x: (left + right) / 2, y: 61, 'text-anchor': 'middle', class: 'axis-label' }, 'row-normalized Gaussian shape in x');
+    add(svg, 'text', { x: 812, y: 61, class: 'axis-label mono' }, 'R');
+    add(svg, 'text', { x: 890, y: 61, class: 'axis-label mono' }, 'B');
+    add(svg, 'text', { x: 985, y: 61, class: 'axis-label mono' }, 'u');
+    add(svg, 'text', { x: 1080, y: 61, class: 'axis-label mono' }, 'log|u|');
+
+    basis.forEach((term, index) => {
+      const y0 = rowTop + index * rowHeight;
+      const baseline = y0 + rowHeight / 2 + 1;
+      const isPad = term.role === 'path-pad';
+      const color = isPad ? colors.teal : (term.u < 0 ? colors.red : colors.blue);
+
+      if (index % 2 === 1) {
+        add(svg, 'rect', {
+          x: 0, y: y0, width: 1170, height: rowHeight,
+          fill: isPad ? '#eaf7f3' : '#edf4fa', opacity: 0.52
+        });
+      }
+      add(svg, 'line', { x1: 12, x2: 1164, y1: y0 + rowHeight, y2: y0 + rowHeight, stroke: '#e5eaee', 'stroke-width': 1 });
+      add(svg, 'line', { x1: left, x2: right, y1: baseline, y2: baseline, stroke: '#b6c1ca', 'stroke-width': 0.8 });
+
+      const direction = term.u >= 0 ? -1 : 1;
+      const profile = linspace(xMin, xMax, 161).map(x => [
+        mapX(x),
+        baseline + direction * 11.5 * Math.exp(-term.B * (x - term.R) * (x - term.R))
+      ]);
+      const area = [[mapX(xMin), baseline], ...profile, [mapX(xMax), baseline]];
+      const profilePath = add(svg, 'path', {
+        d: `${pathFrom(area)} Z`, fill: color, 'fill-opacity': 0.43,
+        stroke: color, 'stroke-width': 1.35, 'stroke-linejoin': 'round'
+      });
+      add(svg, 'circle', {
+        cx: mapX(term.R), cy: baseline + direction * 11.5,
+        r: 2.8, fill: color, stroke: '#fff', 'stroke-width': 1
+      });
+
+      add(svg, 'text', { x: 20, y: baseline + 4, class: 'tick-label mono' }, `k=${String(term.k).padStart(2, '0')}`);
+      add(svg, 'text', {
+        x: 74, y: baseline + 4, class: 'tiny', fill: color, 'font-weight': 720
+      }, isPad ? 'PAD' : 'CORE');
+      add(svg, 'text', { x: 812, y: baseline + 4, class: 'tick-label mono' }, term.R.toFixed(1));
+      add(svg, 'text', { x: 878, y: baseline + 4, class: 'tick-label mono' }, term.B.toFixed(4));
+      add(svg, 'text', {
+        x: 969, y: baseline + 4, class: 'tick-label mono', fill: term.u < 0 ? colors.red : colors.muted
+      }, term.u.toExponential(3));
+
+      const barX = 1080;
+      const barWidth = 75;
+      const logMagnitude = Math.log10(Math.abs(term.u));
+      const scaled = Math.max(0, Math.min(1, (logMagnitude + 3.1) / 3.0));
+      add(svg, 'rect', { x: barX, y: baseline - 4, width: barWidth, height: 8, rx: 4, fill: '#dfe6eb' });
+      add(svg, 'rect', { x: barX, y: baseline - 4, width: Math.max(2, barWidth * scaled), height: 8, rx: 4, fill: color, opacity: 0.86 });
+
+      add(
+        profilePath,
+        'title',
+        {},
+        'k=' + term.k + ', ' + term.role + ', u=' + term.u + ', B=' + term.B + ', R=' + term.R
+      );
+    });
+
+    add(svg, 'line', {
+      x1: 10, x2: 1164, y1: rowTop + 8 * rowHeight, y2: rowTop + 8 * rowHeight,
+      stroke: colors.teal, 'stroke-width': 2.2
+    });
+    add(svg, 'text', {
+      x: 1158, y: rowTop + 8 * rowHeight - 7,
+      'text-anchor': 'end', class: 'annotation', fill: colors.teal
+    }, '下方 8 行：沿 −x 预埋的 path-pad');
+
+    add(svg, 'line', { x1: left, x2: right, y1: rowBottom, y2: rowBottom, class: 'axis-line' });
+    add(svg, 'line', { x1: left, x2: left, y1: rowTop, y2: rowBottom, class: 'axis-line' });
+    add(svg, 'line', { x1: right, x2: right, y1: rowTop, y2: rowBottom, class: 'axis-line' });
+    add(svg, 'text', { x: (left + right) / 2, y: rowBottom + 51, 'text-anchor': 'middle', class: 'axis-label' }, '中心位置与形状坐标  x');
+    add(svg, 'text', { x: 1155, y: rowBottom + 24, 'text-anchor': 'end', class: 'tiny' }, 'bar scale: −3.1 ≤ log₁₀|uₖ| ≤ −0.1');
+
+    add(svg, 'rect', { x: 12, y: 18, width: 13, height: 13, rx: 3, fill: colors.blue, opacity: 0.75 });
+    add(svg, 'text', { x: 32, y: 29, class: 'tiny' }, 'core-fit rows 0–7');
+    add(svg, 'rect', { x: 142, y: 18, width: 13, height: 13, rx: 3, fill: colors.teal, opacity: 0.75 });
+    add(svg, 'text', { x: 162, y: 29, class: 'tiny' }, 'path-pad rows 8–15');
+  }
+
+  drawStateChart();
+  drawBasisChart();
+})();
+</script>
+</body>
+</html>
